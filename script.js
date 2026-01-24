@@ -1,4 +1,4 @@
-// CONFIGURACIÓN DE TU NUBE
+// CONFIGURACIÓN DE FIREBASE
 const firebaseURL = "https://nebula-plus-default-rtdb.firebaseio.com/";
 
 let users = [];
@@ -6,27 +6,27 @@ let movies = [];
 let currentBrand = 'disney';
 let currentType = 'pelicula';
 
-// --- 1. CARGA INICIAL (Sincroniza con Firebase) ---
+// --- 1. CARGA INICIAL (Sincronización Total) ---
 async function cargarDatos() {
     try {
-        // Cargar Usuarios desde la nube
-        const resUsers = await fetch(`${firebaseURL}users.json`);
-        const dataUsers = await resUsers.json();
-        users = dataUsers ? Object.keys(dataUsers).map(id => ({
-            id: id, u: dataUsers[id].u, p: dataUsers[id].p, d: dataUsers[id].d 
-        })) : [{u:'admin', p:'1234', d:'2026-12-31'}];
+        // Cargar Usuarios
+        const resU = await fetch(`${firebaseURL}users.json`);
+        const dataU = await resU.json();
+        users = dataU ? Object.keys(dataU).map(id => ({ id, ...dataU[id] })) : [{u:'admin', p:'1234', d:'2026-12-31'}];
 
-        // Cargar Películas/Series desde la nube
-        const resMovies = await fetch(`${firebaseURL}movies.json`);
-        const dataMovies = await resMovies.json();
-        movies = dataMovies ? Object.keys(dataMovies).map(id => ({
-            id: id, ...dataMovies[id]
-        })) : [];
+        // Cargar Contenido
+        const resM = await fetch(`${firebaseURL}movies.json`);
+        const dataM = await resM.json();
+        movies = dataM ? Object.keys(dataM).map(id => ({ id, ...dataM[id] })) : [];
 
         actualizarVista();
-    } catch (error) {
-        console.error("Error sincronizando:", error);
-    }
+        
+        // Si el panel admin está visible, refrescar sus tablas
+        if(!document.getElementById('sc-admin').classList.contains('hidden')) {
+            renderUserTable();
+            renderMovieTable();
+        }
+    } catch (e) { console.error("Error cargando nube:", e); }
 }
 
 // --- 2. LOGIN Y NAVEGACIÓN ---
@@ -34,12 +34,11 @@ function entrar() {
     const u = document.getElementById('log-u').value;
     const p = document.getElementById('log-p').value;
     const user = users.find(x => x.u === u && x.p === p);
-
     if(user) {
         document.getElementById('u-name').innerText = "Perfil: " + u;
         switchScreen('sc-main');
         actualizarVista();
-    } else { alert("Usuario no encontrado"); }
+    } else { alert("Usuario no encontrado o PIN incorrecto"); }
 }
 
 function switchScreen(id) {
@@ -73,7 +72,7 @@ function cerrarReproductor() {
     document.body.style.overflow = 'auto';
 }
 
-// --- 4. PANEL ADMIN (BOTÓN SECRETO) ---
+// --- 4. PANEL ADMIN (BOTÓN INVISIBLE) ---
 function abrirAdmin() {
     if(prompt("PASSWORD ADMIN:") === "2026") {
         switchScreen('sc-admin');
@@ -82,7 +81,7 @@ function abrirAdmin() {
     }
 }
 
-// --- 5. GESTIÓN DE CONTENIDO (NUBE) ---
+// --- 5. GESTIÓN DE CONTENIDO (FIREBASE) ---
 async function guardarContenido() {
     const title = document.getElementById('c-title').value;
     const poster = document.getElementById('c-post').value;
@@ -91,53 +90,48 @@ async function guardarContenido() {
     const type = document.getElementById('c-type').value;
 
     if(title && poster && video) {
-        const nuevaPeli = {title, poster, video, brand, type};
         await fetch(`${firebaseURL}movies.json`, {
             method: 'POST',
-            body: JSON.stringify(nuevaPeli)
+            body: JSON.stringify({title, poster, video, brand, type})
         });
-        
+        alert("¡" + title + " publicado en la nube!");
         document.getElementById('c-title').value = "";
         document.getElementById('c-post').value = "";
         document.getElementById('c-video').value = "";
-        
-        alert("Publicado en la nube!");
-        await cargarDatos(); // Refrescar lista
-        renderMovieTable();
-    }
+        await cargarDatos();
+    } else { alert("Rellena los campos obligatorios"); }
 }
 
 async function borrarMovie(id) {
-    if(confirm("¿Eliminar contenido?")) {
+    if(confirm("¿Eliminar contenido permanentemente?")) {
         await fetch(`${firebaseURL}movies/${id}.json`, { method: 'DELETE' });
         await cargarDatos();
-        renderMovieTable();
     }
 }
 
 function renderMovieTable() {
     const table = document.getElementById('movie-list');
     let html = `<tr><th>Título</th><th>Marca</th><th>X</th></tr>`;
-    movies.forEach((m) => {
-        html += `<tr><td>${m.title}</td><td>${m.brand}</td><td><button onclick="borrarMovie('${m.id}')" style="color:red">X</button></td></tr>`;
+    movies.forEach(m => {
+        html += `<tr><td>${m.title}</td><td>${m.brand}</td><td><button onclick="borrarMovie('${m.id}')" style="color:red; background:none; border:none; font-weight:bold;">X</button></td></tr>`;
     });
     table.innerHTML = html;
 }
 
-// --- 6. GESTIÓN DE USUARIOS (NUBE) ---
+// --- 6. GESTIÓN DE USUARIOS (FIREBASE) ---
 async function guardarUser() {
     const u = document.getElementById('adm-un').value;
     const p = document.getElementById('adm-up').value;
     const d = document.getElementById('adm-ud').value;
-    
     if(u && p && d) {
         await fetch(`${firebaseURL}users.json`, {
             method: 'POST',
             body: JSON.stringify({u, p, d})
         });
-        alert("Usuario creado en la nube");
+        alert("Usuario " + u + " creado");
+        document.getElementById('adm-un').value = "";
+        document.getElementById('adm-up').value = "";
         await cargarDatos();
-        renderUserTable();
     }
 }
 
@@ -145,15 +139,14 @@ async function borrarUser(id) {
     if(confirm("¿Eliminar usuario?")) {
         await fetch(`${firebaseURL}users/${id}.json`, { method: 'DELETE' });
         await cargarDatos();
-        renderUserTable();
     }
 }
 
 function renderUserTable() {
     const table = document.getElementById('user-list');
     let html = `<tr><th>Usuario</th><th>X</th></tr>`;
-    users.forEach((u) => {
-        html += `<tr><td>${u.u}</td><td><button onclick="borrarUser('${u.id}')" style="color:red">X</button></td></tr>`;
+    users.forEach(u => {
+        html += `<tr><td>${u.u}</td><td><button onclick="borrarUser('${u.id}')" style="color:red; background:none; border:none; font-weight:bold;">X</button></td></tr>`;
     });
     table.innerHTML = html;
 }
@@ -175,9 +168,7 @@ function actualizarVista() {
     const grid = document.getElementById('grid');
     if(!grid) return;
     document.getElementById('cat-title').innerText = currentBrand.toUpperCase() + " > " + currentType.toUpperCase();
-    
     const filtrados = movies.filter(m => m.brand === currentBrand && m.type === currentType);
-    
     grid.innerHTML = filtrados.map(m => `
         <div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>
     `).join('');
@@ -187,8 +178,10 @@ function buscar() {
     const q = document.getElementById('search-box').value.toLowerCase();
     const grid = document.getElementById('grid');
     const filtered = movies.filter(m => m.title.toLowerCase().includes(q));
-    grid.innerHTML = filtered.map(m => `<div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>`).join('');
+    grid.innerHTML = filtered.map(m => `
+        <div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>
+    `).join('');
 }
 
-// INICIAR CARGA
+// INICIAR SINCRO
 cargarDatos();

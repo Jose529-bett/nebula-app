@@ -1,75 +1,87 @@
 const firebaseURL = "https://nebula-plus-default-rtdb.firebaseio.com/";
 
-// Base de datos local temporal (se sincroniza con la nube)
-let movies = [];
 let users = [];
+let movies = [];
 
-// 1. CARGAR DATOS AL INICIAR
+// --- 1. CARGAR TODO AL INICIAR ---
 async function cargarDatos() {
     try {
-        // Cargar Películas
+        // Cargar Usuarios
+        const resUsers = await fetch(`${firebaseURL}users.json`);
+        const dataUsers = await resUsers.json();
+        users = dataUsers ? Object.keys(dataUsers).map(id => ({
+            id: id, u: dataUsers[id].u, p: dataUsers[id].p 
+        })) : [{u:'admin', p:'2026'}];
+
+        // Cargar Películas/Series
         const resMovies = await fetch(`${firebaseURL}movies.json`);
         const dataMovies = await resMovies.json();
         movies = dataMovies ? Object.values(dataMovies) : [];
 
-        // Cargar Usuarios
-        const resUsers = await fetch(`${firebaseURL}users.json`);
-        const dataUsers = await resUsers.json();
-        users = dataUsers ? Object.values(dataUsers) : [{u:'admin', p:'2026'}];
-
         actualizarVista();
-    } catch (error) {
-        console.error("Error cargando datos:", error);
-    }
+    } catch (e) { console.error("Error al sincronizar:", e); }
 }
 
-// 2. GUARDAR PELÍCULA EN LA NUBE
+// --- 2. SUBIR CONTENIDO (Películas, Disney, Netflix, etc.) ---
 async function guardarContenido() {
-    const nuevaPelicula = {
+    // Tomamos los datos de tus inputs (Asegúrate que los ID coincidan con tu HTML)
+    const nuevaPeli = {
         title: document.getElementById('c-title').value,
         poster: document.getElementById('c-post').value,
         video: document.getElementById('c-video').value,
-        brand: document.getElementById('c-brand').value,
-        type: document.getElementById('c-type').value
+        brand: document.getElementById('c-brand').value, // Para Disney, Netflix, etc.
+        type: document.getElementById('c-type').value    // Para Película o Serie
     };
 
-    if(nuevaPelicula.title && nuevaPelicula.poster && nuevaPelicula.video) {
+    if(nuevaPeli.title && nuevaPeli.poster && nuevaPeli.video) {
         await fetch(`${firebaseURL}movies.json`, {
             method: 'POST',
-            body: JSON.stringify(nuevaPelicula)
+            body: JSON.stringify(nuevaPeli)
         });
-        alert("¡Película publicada para todos los usuarios!");
-        location.reload(); // Recarga para ver los cambios
+        alert("¡" + nuevaPeli.title + " subida a la nube!");
+        location.reload(); 
     } else {
-        alert("Por favor rellena los campos principales");
+        alert("Faltan datos importantes");
     }
 }
 
-// 3. CREAR USUARIO EN LA NUBE (Desde el Panel Admin)
-async function crearUsuarioNuevo(usuario, clave) {
-    const nuevoUsuario = { u: usuario, p: clave };
-    await fetch(`${firebaseURL}users.json`, {
-        method: 'POST',
-        body: JSON.stringify(nuevoUsuario)
-    });
-    alert("Usuario creado con éxito. Ya puede iniciar sesión en cualquier APK.");
+// --- 3. REGISTRAR Y ELIMINAR USUARIOS ---
+async function registrarNuevoUsuario() {
+    const u = document.getElementById('reg-user').value;
+    const p = document.getElementById('reg-pass').value;
+    if(u && p) {
+        await fetch(`${firebaseURL}users.json`, {
+            method: 'POST',
+            body: JSON.stringify({ u: u, p: p })
+        });
+        alert("Usuario creado");
+        cargarDatos();
+    }
 }
 
-// 4. LOGIN (Verifica contra la nube)
+async function eliminarUsuario() {
+    const u = document.getElementById('reg-user').value;
+    const encontrado = users.find(user => user.u === u);
+    if (encontrado && encontrado.id) {
+        await fetch(`${firebaseURL}users/${encontrado.id}.json`, { method: 'DELETE' });
+        alert("Usuario borrado");
+        cargarDatos();
+    }
+}
+
+// --- 4. LOGIN ---
 function login() {
-    const userVal = document.getElementById('user').value;
-    const passVal = document.getElementById('pass').value;
-
-    const coincidencia = users.find(user => user.u === userVal && user.p === passVal);
-
-    if (coincidencia) {
+    const u = document.getElementById('user').value;
+    const p = document.getElementById('pass').value;
+    const ok = users.find(user => user.u === u && user.p === p);
+    if (ok) {
         document.getElementById('login-screen').style.display = 'none';
     } else {
-        alert("Usuario o contraseña incorrectos");
+        alert("Error de acceso");
     }
 }
 
-// 5. ACTUALIZAR LA PANTALLA
+// --- 5. MOSTRAR EN PANTALLA ---
 function actualizarVista() {
     const container = document.getElementById('movies-container');
     if(!container) return;
@@ -78,17 +90,16 @@ function actualizarVista() {
     movies.forEach(m => {
         const card = document.createElement('div');
         card.className = 'movie-card';
+        // Aquí puedes usar m.brand o m.type si quieres poner un icono de Netflix o Disney
         card.innerHTML = `
-            <img src="${m.poster}" onclick="verVideo('${m.video}')">
-            <h4>${m.title}</h4>
+            <img src="${m.poster}" onclick="window.location.href='${m.video}'">
+            <div class="info">
+                <h4>${m.title}</h4>
+                <span>${m.brand}</span>
+            </div>
         `;
         container.appendChild(card);
     });
 }
 
-function verVideo(url) {
-    window.location.href = url;
-}
-
-// Iniciar la app cargando la nube
 cargarDatos();

@@ -1,54 +1,58 @@
-body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #080a12; color: white; }
+:root { --bg: #040714; --card: #1a1d29; --blue: #0063e5; --input: #31343e; --green: #28a745; }
+
+body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
 .hidden { display: none !important; }
 
-/* INTRO */
+/* --- INTRO ANIMATION --- */
 #intro-screen {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: radial-gradient(circle, #001a33 0%, #000 100%);
     display: flex; justify-content: center; align-items: center;
-    z-index: 50000; transition: opacity 1s;
+    z-index: 9999999; transition: opacity 1s ease-in-out;
 }
-.intro-logo { font-size: 4rem; font-weight: 900; animation: zoom 3s forwards; }
+.intro-logo {
+    font-size: 5rem; letter-spacing: 12px; font-weight: 900;
+    animation: glowZoom 3.5s ease-in-out forwards;
+}
 .intro-logo span { color: #00d4ff; }
+.intro-arc {
+    position: absolute; top: 50%; left: 50%; width: 400px; height: 200px;
+    border-top: 4px solid #00d4ff; border-radius: 50%;
+    transform: translate(-50%, -50%) rotate(-200deg);
+    animation: arcMotion 2.8s ease-in-out forwards; opacity: 0;
+}
+@keyframes glowZoom {
+    0% { transform: scale(0.7); opacity: 0; filter: blur(10px); }
+    100% { transform: scale(1.1); opacity: 1; filter: blur(0); }
+}
+@keyframes arcMotion {
+    0% { transform: translate(-50%, -50%) rotate(-200deg); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translate(-50%, -50%) rotate(-45deg); opacity: 0; }
+}
 .fade-out { opacity: 0; pointer-events: none; }
 
-/* BOTÓN SECRETO */
-.admin-trigger { position: fixed; top: 0; left: 0; width: 60px; height: 60px; z-index: 60000; }
+/* --- ADMIN UI (IMAGEN 1) --- */
+#sc-admin { padding: 40px 20px; background: #080a12; }
+.admin-main-title { font-size: 2.5rem; margin: 0; font-weight: 800; }
+.admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; padding: 20px; max-width: 1200px; margin: 0 auto; }
+.admin-card { background: #1c1f2a; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.admin-card h3 { font-size: 1.6rem; margin-top: 0; color: #fff; }
+.row-admin { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-/* PANEL ADMIN (DISEÑO IMAGEN 1) */
-#sc-admin { padding: 20px; text-align: left; }
-.admin-header h1 { font-size: 2.5rem; margin: 0; }
-.admin-header h2 { font-size: 1.8rem; margin: 5px 0 20px 0; color: #fff; }
-.btn-sesion { background: #eee; border: none; padding: 5px 15px; border-radius: 4px; font-weight: bold; }
+.btn-blue-vibrant { background: #007bff; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; font-size: 1.1rem; }
+.btn-green-vibrant { background: var(--green); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; font-size: 1.1rem; }
+.btn-red-outline { background: white; color: black; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
 
-.admin-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 25px; max-width: 1100px; margin: 0 auto;
-}
-
-.admin-card {
-    background: #1a1d29; padding: 35px; border-radius: 25px;
-    display: flex; flex-direction: column; gap: 15px;
-}
-
-.admin-card h3 { font-size: 1.6rem; margin: 0 0 10px 0; }
-
-input, select {
-    background: #2a2e3d; border: none; padding: 18px;
-    border-radius: 12px; color: white; font-size: 1.1rem;
-}
-
-.btn-crear { background: #007bff; color: white; border: none; padding: 18px; border-radius: 12px; font-weight: bold; font-size: 1.2rem; cursor: pointer; }
-.btn-publicar { background: #28a745; color: white; border: none; padding: 18px; border-radius: 12px; font-weight: bold; font-size: 1.2rem; cursor: pointer; }
-
-/* TABLAS */
-.table-container { margin-top: 20px; background: #111; border-radius: 10px; max-height: 150px; overflow-y: auto; }
+/* --- OTROS --- */
+.admin-trigger { position: fixed; top: 0; left: 0; width: 60px; height: 60px; z-index: 999999; }
+.movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 20px; padding: 20px; }
+.poster { width: 100%; aspect-ratio: 2/3; background-size: cover; border-radius: 12px; cursor: pointer; transition: 0.3s; background-color: #111; }
+.poster:hover { transform: scale(1.05); box-shadow: 0 0 20px #00d4ff; }
+.player-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; display: flex; align-items: center; justify-content: center; }
+.player-container { width: 95%; height: 95%; display: flex; flex-direction: column; }
+.video-frame { flex-grow: 1; background: #000; }
+.video-frame iframe { width: 100%; height: 100%; }
+.table-scroll { max-height: 180px; overflow-y: auto; margin-top: 15px; background: #111; border-radius: 8px; }
 table { width: 100%; border-collapse: collapse; }
-td { padding: 12px; border-bottom: 1px solid #222; font-size: 0.9rem; }
-.btn-del { color: #ff4d4d; background: none; border: 1px solid #ff4d4d; border-radius: 4px; padding: 2px 8px; cursor: pointer; }
-
-/* SMART TV FOCUS */
-button:focus, .poster:focus, input:focus {
-    outline: none; border: 4px solid #00d4ff !important;
-    transform: scale(1.05); box-shadow: 0 0 20px #00d4ff;
-}
+td { padding: 10px; border-bottom: 1px solid #222; font-size: 0.9rem; }

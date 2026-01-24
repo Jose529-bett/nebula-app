@@ -1,28 +1,39 @@
-:root { --bg: #040714; --card: #1c1f2a; --blue: #0063e5; }
-body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; }
+:root { --bg: #040714; --card: #1a1d29; --blue: #0063e5; --text: #f9f9f9; }
+body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; overflow-x: hidden; }
 .hidden { display: none !important; }
 
-/* REPRODUCTOR TIPO XUPER */
-.player-overlay { position: fixed; inset: 0; background: #000; z-index: 99999; display: flex; flex-direction: column; }
-.player-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
-.video-wrapper { flex-grow: 1; display: flex; align-items: center; justify-content: center; background: #000; }
-#main-iframe { width: 100%; height: 100%; max-height: 80vh; aspect-ratio: 16/9; }
+/* INTRO */
+#intro-screen { position: fixed; inset: 0; background: radial-gradient(circle, #0c111d 0%, #040714 100%); display: flex; align-items: center; justify-content: center; z-index: 999999; }
+.intro-content { position: relative; text-align: center; }
+.intro-logo { font-size: 3.5rem; letter-spacing: 6px; animation: zoomIn 2.5s ease-out forwards; }
+.intro-logo span { color: var(--blue); }
+.intro-arc { position: absolute; top: -20%; left: -10%; width: 120%; height: 140%; border-top: 4px solid var(--blue); border-radius: 50%; opacity: 0; animation: arcDraw 2s ease-out 0.5s forwards; }
+@keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1.1); opacity: 1; } }
+@keyframes arcDraw { from { transform: rotate(-30deg); opacity: 0; } to { transform: rotate(0deg); opacity: 1; } }
+.fade-out { opacity: 0; pointer-events: none; transition: 1.5s; }
 
-/* TABLAS PANEL ADMIN */
-.table-wrapper { margin-top: 15px; background: #000; border-radius: 8px; max-height: 200px; overflow-y: auto; }
+/* REPRODUCTOR XUPER TV */
+.player-overlay { position: fixed; inset: 0; background: #000; z-index: 100000; display: flex; flex-direction: column; }
+.player-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to bottom, black, transparent); position: absolute; width: 100%; box-sizing: border-box; z-index: 10; }
+.video-container { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; }
+#main-iframe { width: 100%; height: 100%; border: none; } /* Forzado a ocupar todo */
+
+/* TABS PELICULA/SERIE */
+.tabs-row { display: flex; justify-content: center; gap: 20px; padding: 15px; }
+.tab-btn { background: none; border: none; color: #888; font-weight: bold; font-size: 1rem; cursor: pointer; padding: 10px; }
+.tab-btn.active { color: white; border-bottom: 3px solid var(--blue); }
+
+/* CARDS Y TABLAS */
+.card-premium { background: var(--card); padding: 25px; border-radius: 20px; width: 85%; max-width: 450px; margin: 20px auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.table-wrapper { margin-top: 20px; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid #333; }
 table { width: 100%; border-collapse: collapse; }
-td { padding: 10px; border-bottom: 1px solid #222; font-size: 0.9rem; }
-.btn-del { color: #ff4d4d; background: none; border: none; font-weight: bold; cursor: pointer; }
+td, th { padding: 12px; text-align: left; border-bottom: 1px solid #222; font-size: 0.85rem; }
+.btn-del { color: #ff4d4d; background: none; border: 1px solid #ff4d4d; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
 
-/* NAVBAR Y MENÚ */
-.navbar { background: #090b13; padding: 10px; border-bottom: 1px solid #333; }
-.nav-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-#search-box { background: #2a2e3d; border: none; color: white; padding: 8px; border-radius: 20px; width: 40%; }
-.dropdown { position: absolute; right: 10px; top: 50px; background: #1a1d29; border: 1px solid #333; padding: 15px; border-radius: 10px; z-index: 100; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-.brand-bar { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 5px; }
-.brand-bar button { font-size: 0.7rem; padding: 5px 10px; white-space: nowrap; }
-
-/* ADMIN */
-.admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; padding: 15px; }
-.card { background: var(--card); padding: 15px; border-radius: 12px; }
-.admin-trigger { position: fixed; top: 0; left: 0; width: 50px; height: 50px; z-index: 999999; }
+/* NAVBAR */
+.nav-main { background: #090b13; padding: 10px; border-bottom: 1px solid #333; }
+.nav-top { display: flex; justify-content: space-between; align-items: center; padding: 5px 15px; }
+#search-box { background: #2a2e3d; border: none; color: white; padding: 10px 15px; border-radius: 20px; width: 50%; outline: none; }
+.brand-bar { display: flex; overflow-x: auto; gap: 10px; padding: 15px; scrollbar-width: none; }
+.brand-bar button { background: #1a1d29; color: white; border: 1px solid #333; padding: 8px 15px; border-radius: 8px; white-space: nowrap; font-size: 0.75rem; font-weight: bold; }
+.dropdown { position: absolute; right: 20px; background: #1a1d29; padding: 15px; border-radius: 12px; border: 1px solid #333; z-index: 100; top: 60px; }

@@ -24,7 +24,7 @@
             <p class="subtitle">Inicia sesión con tu cuenta</p>
             <div class="input-group">
                 <input type="text" id="log-u" placeholder="Usuario o correo">
-                <input type="password" id="log-p" placeholder="Contraseña">
+                <input type="password" id="log-p" placeholder="PIN de acceso">
             </div>
             <button class="btn-disney" onclick="entrar()">INICIAR SESIÓN</button>
             <p class="foot-note">¿Olvidaste tu PIN? Contacta a soporte.</p>
@@ -34,10 +34,10 @@
     <div id="sc-admin" class="screen hidden">
         <div class="admin-header">
             <h2 class="logo-s">NEBULA<span>+</span> <span>Panel</span></h2>
-            <button class="btn-close" onclick="cerrarSesion()">CERRAR</button>
+            <button class="btn-close" onclick="cerrarPanel()">CERRAR</button>
         </div>
         
-        <div class="admin-container">
+        <div class="admin-scroll-container">
             <div class="glass-card admin-box">
                 <h3>Gestión de Clientes</h3>
                 <div class="form-row">
@@ -45,12 +45,12 @@
                     <input type="text" id="adm-up" placeholder="PIN">
                 </div>
                 <input type="date" id="adm-ud">
-                <button class="btn-add" onclick="guardarUser()">+ CREAR NUEVO USUARIO</button>
+                <button class="btn-disney" onclick="guardarUser()">+ CREAR NUEVO USUARIO</button>
                 
                 <div class="modern-table">
                     <div class="table-head">
                         <span>Usuario</span>
-                        <span>Vencimiento</span>
+                        <span>Vence</span>
                         <span>Acción</span>
                     </div>
                     <div id="user-table" class="table-body"></div>
@@ -60,8 +60,8 @@
             <div class="glass-card admin-box">
                 <h3>Biblioteca de Contenido</h3>
                 <input type="text" id="c-title" placeholder="Título de la obra">
-                <input type="text" id="c-post" placeholder="Enlace del Poster (URL)">
-                <input type="text" id="c-video" placeholder="Enlace del Video (URL)">
+                <input type="text" id="c-post" placeholder="URL Poster">
+                <input type="text" id="c-video" placeholder="URL Video">
                 <div class="form-row">
                     <select id="c-brand">
                         <option value="disney">Disney</option>
@@ -69,14 +69,13 @@
                         <option value="hbo">HBO Max</option>
                         <option value="paramount">Paramount+</option>
                         <option value="apple">Apple TV</option>
-                        <option value="espn">ESPN</option>
                     </select>
                     <select id="c-type">
                         <option value="pelicula">Película</option>
                         <option value="serie">Serie</option>
                     </select>
                 </div>
-                <button class="btn-add" onclick="guardarContenido()">PUBLICAR AHORA</button>
+                <button class="btn-disney" onclick="guardarContenido()">PUBLICAR AHORA</button>
                 
                 <div class="modern-table">
                     <div class="table-head">
@@ -90,8 +89,8 @@
         </div>
     </div>
 
-    <div id="sc-main" class="screen hidden">...</div>
-    <div id="video-player" class="player-overlay hidden">...</div>
+    <div id="sc-main" class="screen hidden">
+        </div>
 
     <script src="script.js"></script>
 </body>

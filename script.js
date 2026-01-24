@@ -1,5 +1,5 @@
 // 1. REEMPLAZA ESTE LINK CON EL TUYO
-const firebaseURL = "TU_LINK_NUEVO_AQUI.firebaseio.com/"; 
+const firebaseURL = "https://nebula-plus-app-default-rtdb.firebaseio.com/"; 
 
 let users = [];
 let movies = [];

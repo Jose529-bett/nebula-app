@@ -1,25 +1,52 @@
-// ... (mantenemos las variables de FirebaseURL) ...
+// ... Variables de Firebase ...
 
+function switchScreen(screenId) {
+    // Ocultar todas las pantallas
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    // Mostrar solo la elegida
+    document.getElementById(screenId).classList.remove('hidden');
+}
+
+function abrirAdmin() {
+    const pass = prompt("PIN DE ADMINISTRADOR:");
+    if (pass === "2026") {
+        switchScreen('sc-admin');
+        renderTablas();
+    }
+}
+
+function cerrarPanel() {
+    // Al cerrar el panel, volvemos al login o al catálogo según prefieras
+    switchScreen('sc-login'); 
+}
+
+function entrar() {
+    const u = document.getElementById('log-u').value;
+    const p = document.getElementById('log-p').value;
+    const user = users.find(x => x.u === u && x.p === p);
+    
+    if (user) {
+        switchScreen('sc-main');
+    } else {
+        alert("Usuario o PIN incorrecto");
+    }
+}
+
+// Función para renderizar tablas ajustada al nuevo CSS
 function renderTablas() {
-    // Tabla de Usuarios
-    const userCont = document.getElementById('user-table');
-    userCont.innerHTML = users.map(u => `
+    document.getElementById('user-table').innerHTML = users.map(u => `
         <div class="table-row">
             <span>${u.u}</span>
-            <span style="color:#888">${u.d || '---'}</span>
-            <button class="btn-del-pro" onclick="borrar('users','${u.id}')">ELIMINAR</button>
+            <span>${u.d || '--'}</span>
+            <button onclick="borrar('users','${u.id}')" style="color:#ff4d4d; background:none; border:none; cursor:pointer">X</button>
         </div>
     `).join('');
 
-    // Tabla de Películas
-    const movieCont = document.getElementById('movie-table');
-    movieCont.innerHTML = movies.map(m => `
+    document.getElementById('movie-table').innerHTML = movies.map(m => `
         <div class="table-row">
             <span>${m.title}</span>
-            <span style="color:#888; text-transform:capitalize;">${m.brand}</span>
-            <button class="btn-del-pro" onclick="borrar('movies','${m.id}')">ELIMINAR</button>
+            <span style="text-transform:capitalize">${m.brand}</span>
+            <button onclick="borrar('movies','${m.id}')" style="color:#ff4d4d; background:none; border:none; cursor:pointer">X</button>
         </div>
     `).join('');
 }
-
-// ... (funciones de guardar y borrar se mantienen igual) ...

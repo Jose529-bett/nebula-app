@@ -1,40 +1,41 @@
-
-:root { --bg: #040714; --card: #1a1d29; --blue: #0063e5; --input: #31343e; }
+:root { --bg: #040714; --card: #1c1f2a; --blue: #0063e5; --input: #2a2e3d; }
 body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
 .hidden { display: none !important; }
 
-/* ADMIN TRIGGER */
-.admin-trigger { position: fixed; top: 0; left: 0; width: 60px; height: 60px; z-index: 999999; }
-
-/* REPRODUCTOR INTERNO */
-.player-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.96);
-    z-index: 10000;
-    display: flex; align-items: center; justify-content: center;
+/* INTRO */
+#intro-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle, #001a33 0%, #000 100%);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 9999999; transition: opacity 1s;
 }
-.player-container { width: 90%; max-width: 1100px; }
-.close-player { background: #e50914; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; float: right; font-weight: bold; margin-bottom: 15px; }
-.video-frame { width: 100%; aspect-ratio: 16/9; background: #000; border: 2px solid #333; }
-.video-frame iframe { width: 100%; height: 100%; }
-#player-title { text-align: left; margin-top: 15px; letter-spacing: 1px; }
+.intro-logo { font-size: 4rem; font-weight: 900; animation: zoom 3.5s forwards; }
+.intro-logo span { color: #00d4ff; }
+.fade-out { opacity: 0; pointer-events: none; }
 
-/* RESTO DEL DISEÑO */
-.login-container { width: 320px; margin: 20vh auto; text-align: center; }
-.logo-title span { color: var(--blue); }
-input, select { width: 100%; padding: 12px; margin: 8px 0; background: var(--input); border: none; color: white; border-radius: 5px; }
-.btn-blue { background: var(--blue); color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold; }
-.navbar { padding: 20px 40px; background: var(--bg); border-bottom: 1px solid #1a1d29; }
-.brand-bar { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
-.brand-bar button { background: var(--card); color: white; border: 1px solid #333; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 500; }
-.movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 25px; padding: 40px; }
-.poster { width: 100%; aspect-ratio: 2/3; background-size: cover; border-radius: 12px; cursor: pointer; transition: 0.4s; border: 2px solid transparent; }
-.poster:hover { transform: scale(1.08); border-color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.6); }
-.admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; }
-.admin-card { background: var(--card); padding: 25px; border-radius: 15px; }
-.table-scroll { max-height: 250px; overflow-y: auto; margin-top: 15px; background: #000; }
-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; color: #ccc; }
-th, td { padding: 10px; border-bottom: 1px solid #222; }
-.dropdown { position: absolute; right: 50px; top: 75px; background: var(--card); padding: 15px; border-radius: 10px; border: 1px solid #444; width: 160px; text-align: center; }
+/* LOGIN CENTRADO */
+#sc-login { display: flex; align-items: center; justify-content: center; height: 100vh; }
+.login-wrapper { width: 100%; max-width: 360px; padding: 20px; }
+.login-container { background: var(--card); padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
 
+/* PANEL ADMIN ESTILO IMAGEN 1 */
+.admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; padding: 20px; align-items: start; }
+.admin-card { background: var(--card); padding: 30px; border-radius: 20px; }
+.row-admin { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn-blue-vibrant { background: #007bff; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; }
+.btn-green-vibrant { background: #28a745; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; }
+.btn-red-outline { background: white; color: black; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+
+input, select { width: 100%; padding: 14px; margin: 8px 0; background: var(--input); border: none; color: white; border-radius: 10px; box-sizing: border-box; }
+.table-scroll { max-height: 180px; overflow-y: auto; background: #000; border-radius: 8px; margin-top: 15px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+td { padding: 10px; border-bottom: 1px solid #222; }
+
+/* CATÁLOGO */
+.movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; padding: 20px; }
+.poster { aspect-ratio: 2/3; background-size: cover; border-radius: 10px; cursor: pointer; transition: 0.3s; }
+.poster:hover { transform: scale(1.05); box-shadow: 0 0 15px #00d4ff; }
+.player-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:10000; display:flex; align-items:center; justify-content:center; }
+.player-container { width:95%; height:90%; }
+.video-frame { width:100%; height:85%; background:#000; }
+.video-frame iframe { width:100%; height:100%; }

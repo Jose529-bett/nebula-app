@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nebula+ | Premium</title>
+    <title>Nebula+ | Streaming Experience</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -18,43 +19,50 @@
     </div>
 
     <div id="sc-login" class="screen">
-        <div class="card-premium">
+        <div class="glass-card">
             <h1 class="logo-text">NEBULA<span>+</span></h1>
-            <p>CLIENTES PREMIUM</p>
-            <input type="text" id="log-u" placeholder="Usuario">
-            <input type="password" id="log-p" placeholder="PIN de Acceso">
-            <button class="btn-primary" onclick="entrar()">ENTRAR</button>
+            <p class="subtitle">Inicia sesión con tu cuenta</p>
+            <div class="input-group">
+                <input type="text" id="log-u" placeholder="Usuario o correo">
+                <input type="password" id="log-p" placeholder="Contraseña">
+            </div>
+            <button class="btn-disney" onclick="entrar()">INICIAR SESIÓN</button>
+            <p class="foot-note">¿Olvidaste tu PIN? Contacta a soporte.</p>
         </div>
     </div>
 
     <div id="sc-admin" class="screen hidden">
         <div class="admin-header">
-            <h2>Panel Administrativo</h2>
-            <button class="btn-out" onclick="cerrarSesion()">SALIR</button>
+            <h2 class="logo-s">NEBULA<span>+</span> <span>Panel</span></h2>
+            <button class="btn-close" onclick="cerrarSesion()">CERRAR</button>
         </div>
-        <div class="admin-scroll">
-            <div class="card-premium admin-card">
-                <h3>Gestión Usuarios</h3>
-                <div class="input-inline">
+        
+        <div class="admin-container">
+            <div class="glass-card admin-box">
+                <h3>Gestión de Clientes</h3>
+                <div class="form-row">
                     <input type="text" id="adm-un" placeholder="Nombre">
                     <input type="text" id="adm-up" placeholder="PIN">
                 </div>
                 <input type="date" id="adm-ud">
-                <button class="btn-primary" onclick="guardarUser()">CREAR USUARIO</button>
-                <div class="table-wrapper">
-                    <table>
-                        <thead><tr><th>Usuario</th><th>Vence</th><th>Acción</th></tr></thead>
-                        <tbody id="user-table"></tbody>
-                    </table>
+                <button class="btn-add" onclick="guardarUser()">+ CREAR NUEVO USUARIO</button>
+                
+                <div class="modern-table">
+                    <div class="table-head">
+                        <span>Usuario</span>
+                        <span>Vencimiento</span>
+                        <span>Acción</span>
+                    </div>
+                    <div id="user-table" class="table-body"></div>
                 </div>
             </div>
 
-            <div class="card-premium admin-card">
-                <h3>Publicar Contenido</h3>
-                <input type="text" id="c-title" placeholder="Título">
-                <input type="text" id="c-post" placeholder="URL Poster">
-                <input type="text" id="c-video" placeholder="URL Video">
-                <div class="input-inline">
+            <div class="glass-card admin-box">
+                <h3>Biblioteca de Contenido</h3>
+                <input type="text" id="c-title" placeholder="Título de la obra">
+                <input type="text" id="c-post" placeholder="Enlace del Poster (URL)">
+                <input type="text" id="c-video" placeholder="Enlace del Video (URL)">
+                <div class="form-row">
                     <select id="c-brand">
                         <option value="disney">Disney</option>
                         <option value="netflix">Netflix</option>
@@ -62,66 +70,28 @@
                         <option value="paramount">Paramount+</option>
                         <option value="apple">Apple TV</option>
                         <option value="espn">ESPN</option>
-                        <option value="natgeo">NatGeo</option>
                     </select>
                     <select id="c-type">
                         <option value="pelicula">Película</option>
                         <option value="serie">Serie</option>
                     </select>
                 </div>
-                <button class="btn-green" onclick="guardarContenido()">PUBLICAR</button>
-                <div class="table-wrapper">
-                    <table>
-                        <thead><tr><th>Título</th><th>Marca</th><th>Acción</th></tr></thead>
-                        <tbody id="movie-table"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="sc-main" class="screen hidden">
-        <nav class="nav-main">
-            <div class="nav-top">
-                <span class="logo-s">NEBULA<span>+</span></span>
-                <input type="text" id="search-box" placeholder="🔍 Buscar contenido..." onkeyup="buscar()">
-                <div class="user-area">
-                    <button class="btn-avatar" onclick="toggleMenu()">👤</button>
-                    <div id="drop-menu" class="dropdown hidden">
-                        <p id="u-display"></p>
-                        <button onclick="cerrarSesion()">Cerrar Sesión</button>
+                <button class="btn-add" onclick="guardarContenido()">PUBLICAR AHORA</button>
+                
+                <div class="modern-table">
+                    <div class="table-head">
+                        <span>Título</span>
+                        <span>Categoría</span>
+                        <span>Acción</span>
                     </div>
+                    <div id="movie-table" class="table-body"></div>
                 </div>
             </div>
-            <div class="brand-bar">
-                <button onclick="seleccionarMarca('disney')">DISNEY</button>
-                <button onclick="seleccionarMarca('netflix')">NETFLIX</button>
-                <button onclick="seleccionarMarca('hbo')">HBO MAX</button>
-                <button onclick="seleccionarMarca('paramount')">PARA+</button>
-                <button onclick="seleccionarMarca('apple')">APPLE TV</button>
-                <button onclick="seleccionarMarca('espn')">ESPN</button>
-                <button onclick="seleccionarMarca('natgeo')">NATGEO</button>
-            </div>
-        </nav>
-        
-        <div class="catalog-content">
-            <div class="tabs-row">
-                <button id="t-pelicula" class="tab-btn active" onclick="cambiarTipo('pelicula')">PELÍCULAS</button>
-                <button id="t-serie" class="tab-btn" onclick="cambiarTipo('serie')">SERIES</button>
-            </div>
-            <div id="grid" class="movie-grid"></div>
         </div>
     </div>
 
-    <div id="video-player" class="player-overlay hidden">
-        <div class="player-header">
-            <h3 id="p-title">Reproduciendo</h3>
-            <button class="btn-back" onclick="cerrarReproductor()">✕ VOLVER</button>
-        </div>
-        <div class="video-container">
-            <iframe id="main-iframe" src="" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>
-        </div>
-    </div>
+    <div id="sc-main" class="screen hidden">...</div>
+    <div id="video-player" class="player-overlay hidden">...</div>
 
     <script src="script.js"></script>
 </body>

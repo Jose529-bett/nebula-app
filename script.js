@@ -1,143 +1,94 @@
+const firebaseURL = "https://nebula-plus-default-rtdb.firebaseio.com/";
 
-let users = JSON.parse(localStorage.getItem('neb_u')) || [{u:'admin', p:'1234', d:'2026-12-31'}];
-let movies = JSON.parse(localStorage.getItem('neb_m')) || [];
-let currentBrand = 'disney';
-let currentType = 'pelicula';
+// Base de datos local temporal (se sincroniza con la nube)
+let movies = [];
+let users = [];
 
-// LOGIN Y NAVEGACIÓN
-function entrar() {
-    const u = document.getElementById('log-u').value;
-    const p = document.getElementById('log-p').value;
-    const user = users.find(x => x.u === u && x.p === p);
-    if(user) {
-        document.getElementById('u-name').innerText = "Perfil: " + u;
-        switchScreen('sc-main');
+// 1. CARGAR DATOS AL INICIAR
+async function cargarDatos() {
+    try {
+        // Cargar Películas
+        const resMovies = await fetch(`${firebaseURL}movies.json`);
+        const dataMovies = await resMovies.json();
+        movies = dataMovies ? Object.values(dataMovies) : [];
+
+        // Cargar Usuarios
+        const resUsers = await fetch(`${firebaseURL}users.json`);
+        const dataUsers = await resUsers.json();
+        users = dataUsers ? Object.values(dataUsers) : [{u:'admin', p:'2026'}];
+
         actualizarVista();
-    } else { alert("Usuario no encontrado"); }
-}
-
-function switchScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-}
-
-function cerrarSesion() {
-    document.getElementById('drop-menu').classList.add('hidden');
-    switchScreen('sc-login');
-}
-
-function toggleMenu() { document.getElementById('drop-menu').classList.toggle('hidden'); }
-
-// REPRODUCTOR
-function reproducir(url, titulo) {
-    const player = document.getElementById('video-player');
-    const iframe = document.getElementById('main-iframe');
-    const titleDisp = document.getElementById('player-title');
-    iframe.src = url;
-    titleDisp.innerText = titulo;
-    player.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
-
-function cerrarReproductor() {
-    const player = document.getElementById('video-player');
-    const iframe = document.getElementById('main-iframe');
-    iframe.src = "";
-    player.classList.add('hidden');
-    document.body.style.overflow = 'auto';
-}
-
-// PANEL ADMIN
-function abrirAdmin() {
-    if(prompt("PASSWORD ADMIN:") === "2026") {
-        switchScreen('sc-admin');
-        renderUserTable();
-        renderMovieTable();
+    } catch (error) {
+        console.error("Error cargando datos:", error);
     }
 }
 
-function guardarContenido() {
-    const title = document.getElementById('c-title').value;
-    const poster = document.getElementById('c-post').value;
-    const video = document.getElementById('c-video').value;
-    const brand = document.getElementById('c-brand').value;
-    const type = document.getElementById('c-type').value;
+// 2. GUARDAR PELÍCULA EN LA NUBE
+async function guardarContenido() {
+    const nuevaPelicula = {
+        title: document.getElementById('c-title').value,
+        poster: document.getElementById('c-post').value,
+        video: document.getElementById('c-video').value,
+        brand: document.getElementById('c-brand').value,
+        type: document.getElementById('c-type').value
+    };
 
-    if(title && poster && video) {
-        movies.push({title, poster, video, brand, type});
-        localStorage.setItem('neb_m', JSON.stringify(movies));
-        document.getElementById('c-title').value = "";
-        document.getElementById('c-post').value = "";
-        document.getElementById('c-video').value = "";
-        renderMovieTable();
-        actualizarVista();
-        alert("Publicado!");
+    if(nuevaPelicula.title && nuevaPelicula.poster && nuevaPelicula.video) {
+        await fetch(`${firebaseURL}movies.json`, {
+            method: 'POST',
+            body: JSON.stringify(nuevaPelicula)
+        });
+        alert("¡Película publicada para todos los usuarios!");
+        location.reload(); // Recarga para ver los cambios
+    } else {
+        alert("Por favor rellena los campos principales");
     }
 }
 
-function renderMovieTable() {
-    const table = document.getElementById('movie-list');
-    let html = `<tr><th>Título</th><th>Marca</th><th>X</th></tr>`;
-    movies.forEach((m, i) => {
-        html += `<tr><td>${m.title}</td><td>${m.brand}</td><td><button onclick="borrarMovie(${i})" style="color:red">X</button></td></tr>`;
+// 3. CREAR USUARIO EN LA NUBE (Desde el Panel Admin)
+async function crearUsuarioNuevo(usuario, clave) {
+    const nuevoUsuario = { u: usuario, p: clave };
+    await fetch(`${firebaseURL}users.json`, {
+        method: 'POST',
+        body: JSON.stringify(nuevoUsuario)
     });
-    table.innerHTML = html;
+    alert("Usuario creado con éxito. Ya puede iniciar sesión en cualquier APK.");
 }
 
-function borrarMovie(i) {
-    movies.splice(i, 1);
-    localStorage.setItem('neb_m', JSON.stringify(movies));
-    renderMovieTable();
-    actualizarVista();
-}
+// 4. LOGIN (Verifica contra la nube)
+function login() {
+    const userVal = document.getElementById('user').value;
+    const passVal = document.getElementById('pass').value;
 
-function renderUserTable() {
-    const table = document.getElementById('user-list');
-    let html = `<tr><th>Usuario</th><th>X</th></tr>`;
-    users.forEach((u, i) => {
-        html += `<tr><td>${u.u}</td><td><button onclick="users.splice(${i},1);localStorage.setItem('neb_u',JSON.stringify(users));renderUserTable()" style="color:red">X</button></td></tr>`;
-    });
-    table.innerHTML = html;
-}
+    const coincidencia = users.find(user => user.u === userVal && user.p === passVal);
 
-function guardarUser() {
-    const u = document.getElementById('adm-un').value;
-    const p = document.getElementById('adm-up').value;
-    const d = document.getElementById('adm-ud').value;
-    if(u && p && d) {
-        users.push({u, p, d});
-        localStorage.setItem('neb_u', JSON.stringify(users));
-        renderUserTable();
+    if (coincidencia) {
+        document.getElementById('login-screen').style.display = 'none';
+    } else {
+        alert("Usuario o contraseña incorrectos");
     }
 }
 
-// MOTOR DE VISTA
-function seleccionarMarca(brand) {
-    currentBrand = brand;
-    actualizarVista();
-}
-
-function cambiarTipo(type) {
-    currentType = type;
-    document.getElementById('t-peli').classList.toggle('active', type === 'pelicula');
-    document.getElementById('t-serie').classList.toggle('active', type === 'serie');
-    actualizarVista();
-}
-
+// 5. ACTUALIZAR LA PANTALLA
 function actualizarVista() {
-    const grid = document.getElementById('grid');
-    if(!grid) return;
-    document.getElementById('cat-title').innerText = currentBrand.toUpperCase() + " > " + currentType.toUpperCase();
-    const filtrados = movies.filter(m => m.brand === currentBrand && m.type === currentType);
-    grid.innerHTML = filtrados.map(m => `
-        <div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>
-    `).join('');
+    const container = document.getElementById('movies-container');
+    if(!container) return;
+    container.innerHTML = '';
+
+    movies.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'movie-card';
+        card.innerHTML = `
+            <img src="${m.poster}" onclick="verVideo('${m.video}')">
+            <h4>${m.title}</h4>
+        `;
+        container.appendChild(card);
+    });
 }
 
-function buscar() {
-    const q = document.getElementById('search-box').value.toLowerCase();
-    const grid = document.getElementById('grid');
-    const filtered = movies.filter(m => m.title.toLowerCase().includes(q));
-    grid.innerHTML = filtered.map(m => `<div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>`).join('');
+function verVideo(url) {
+    window.location.href = url;
 }
 
+// Iniciar la app cargando la nube
+cargarDatos();

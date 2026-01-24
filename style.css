@@ -1,14 +1,9 @@
 :root {
     --bg-dark: #040714;
     --disney-blue: #0063e5;
-    --glass: rgba(255, 255, 255, 0.04);
+    --glass: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.1);
     --text-main: #f9f9f9;
-}
-
-/* REGLA CRÍTICA PARA OCULTAR */
-.hidden { 
-    display: none !important; 
 }
 
 body {
@@ -18,18 +13,22 @@ body {
     font-family: 'Inter', sans-serif;
 }
 
+/* SISTEMA DE PANTALLAS */
 .screen {
-    width: 100vw;
-    height: 100vh;
-    position: fixed; /* Asegura que cada pantalla ocupe todo el espacio */
+    position: fixed;
     top: 0;
     left: 0;
-    overflow-y: auto;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-dark);
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: var(--bg-dark);
+    overflow-y: auto;
+    z-index: 10;
 }
+
+.hidden { display: none !important; }
 
 /* BOTÓN SECRETO */
 .admin-trigger {
@@ -39,10 +38,9 @@ body {
     width: 60px;
     height: 60px;
     z-index: 10000;
-    cursor: pointer;
 }
 
-/* DISEÑO DE TARJETAS */
+/* CARDS GLASSMORPISM */
 .glass-card {
     background: var(--glass);
     backdrop-filter: blur(20px);
@@ -50,77 +48,59 @@ body {
     border-radius: 8px;
     padding: 30px;
     width: 85%;
-    max-width: 400px;
+    max-width: 420px;
     margin: 20px 0;
+    text-align: center;
 }
 
-.admin-scroll-container {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-bottom: 50px;
-}
-
-/* ESTILO DE TABLAS PROFESIONALES */
+/* TABLAS */
 .modern-table {
-    margin-top: 20px;
-    background: rgba(0,0,0,0.5);
-    border-radius: 4px;
+    margin-top: 15px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 6px;
 }
-
 .table-head, .table-row {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-columns: 1.5fr 1fr 1fr;
     padding: 10px;
-    border-bottom: 1px solid var(--glass-border);
     font-size: 12px;
+    border-bottom: 1px solid var(--glass-border);
 }
 
-.table-head { color: #888; text-transform: uppercase; font-weight: bold; }
-
-/* BOTONES Y INPUTS (ESTILO DISNEY) */
+/* INPUTS Y BOTONES */
 input, select {
+    width: 100%;
     background: #31343e;
     border: 1px solid transparent;
-    border-radius: 4px;
     padding: 12px;
-    color: white;
-    width: 100%;
-    box-sizing: border-box;
     margin-bottom: 10px;
+    color: white;
+    border-radius: 4px;
+    box-sizing: border-box;
 }
 
 .btn-disney {
     background: var(--disney-blue);
     color: white;
     border: none;
-    padding: 12px;
+    padding: 14px;
     width: 100%;
     border-radius: 4px;
     font-weight: bold;
     cursor: pointer;
-    transition: 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-.btn-disney:hover { filter: brightness(1.2); }
-
-.btn-close {
-    background: white;
-    color: black;
-    border: none;
-    padding: 5px 15px;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.admin-header {
-    width: 100%;
-    padding: 20px;
+/* INTRO */
+#intro-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-dark);
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    box-sizing: border-box;
-    background: rgba(0,0,0,0.8);
+    z-index: 9999;
+    transition: 1s;
 }
+.fade-out { opacity: 0; pointer-events: none; }

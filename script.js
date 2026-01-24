@@ -1,15 +1,35 @@
-let users = JSON.parse(localStorage.getItem('neb_u')) || [{u:'admin', p:'2026', d:'2026-12-31'}];
-let movies = JSON.parse(localStorage.getItem('neb_m')) || [];
+const firebaseURL = "https://nebula-plus-default-rtdb.firebaseio.com/";
+let users = [];
+let movies = [];
 let currentBrand = 'disney';
 let currentType = 'pelicula';
 
-// INTRO CONTROL
+// INTRO
 window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
-        const intro = document.getElementById('intro-screen');
-        if(intro) intro.classList.add('fade-out');
+        document.getElementById('intro-screen').classList.add('fade-out');
+        cargarDesdeFirebase();
     }, 3500);
 });
+
+// CONEXIÓN FIREBASE
+async function cargarDesdeFirebase() {
+    try {
+        const resU = await fetch(`${firebaseURL}users.json`);
+        const dataU = await resU.json();
+        users = dataU ? Object.keys(dataU).map(id => ({ id, ...dataU[id] })) : [];
+
+        const resM = await fetch(`${firebaseURL}movies.json`);
+        const dataM = await resM.json();
+        movies = dataM ? Object.keys(dataM).map(id => ({ id, ...dataM[id] })) : [];
+
+        actualizarVista();
+        if(!document.getElementById('sc-admin').classList.contains('hidden')) {
+            renderUserTable();
+            renderMovieTable();
+        }
+    } catch (e) { console.error("Error cargando Firebase", e); }
+}
 
 // LOGIN
 function entrar() {
@@ -20,26 +40,24 @@ function entrar() {
         document.getElementById('u-name').innerText = "Perfil: " + u;
         switchScreen('sc-main');
         actualizarVista();
-    } else { alert("PIN Incorrecto"); }
+    } else { alert("Usuario o PIN incorrecto"); }
 }
 
-function switchScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-}
-
-function cerrarSesion() { window.location.reload(); }
-
-// ADMIN
-function abrirAdmin() {
-    if(prompt("PASSWORD ADMIN:") === "2026") {
-        switchScreen('sc-admin');
-        renderUserTable();
-        renderMovieTable();
+// ADMIN ACCIONES (FIREBASE)
+async function guardarUser() {
+    const u = document.getElementById('adm-un').value;
+    const p = document.getElementById('adm-up').value;
+    const d = document.getElementById('adm-ud').value;
+    if(u && p) {
+        await fetch(`${firebaseURL}users.json`, {
+            method: 'POST',
+            body: JSON.stringify({u, p, d})
+        });
+        cargarDesdeFirebase();
     }
 }
 
-function guardarContenido() {
+async function guardarContenido() {
     const title = document.getElementById('c-title').value;
     const poster = document.getElementById('c-post').value;
     const video = document.getElementById('c-video').value;
@@ -47,54 +65,44 @@ function guardarContenido() {
     const type = document.getElementById('c-type').value;
 
     if(title && poster && video) {
-        movies.push({title, poster, video, brand, type});
-        localStorage.setItem('neb_m', JSON.stringify(movies));
-        renderMovieTable();
-        actualizarVista();
-        alert("¡Publicado con éxito!");
+        await fetch(`${firebaseURL}movies.json`, {
+            method: 'POST',
+            body: JSON.stringify({title, poster, video, brand, type})
+        });
+        cargarDesdeFirebase();
+        alert("Publicado en la nube!");
     }
+}
+
+async function borrar(tipo, id) {
+    if(confirm("¿Eliminar?")) {
+        await fetch(`${firebaseURL}${tipo}/${id}.json`, { method: 'DELETE' });
+        cargarDesdeFirebase();
+    }
+}
+
+// RENDERS
+function renderUserTable() {
+    const table = document.getElementById('user-list');
+    table.innerHTML = users.map(u => `
+        <tr><td>${u.u}</td><td style="text-align:right"><button onclick="borrar('users','${u.id}')" style="color:red; background:none; border:none;">X</button></td></tr>
+    `).join('');
 }
 
 function renderMovieTable() {
     const table = document.getElementById('movie-list');
-    table.innerHTML = movies.map((m, i) => `
-        <tr><td>${m.title}</td><td><button onclick="borrarMovie(${i})" style="color:red; background:none; border:none; cursor:pointer">X</button></td></tr>
+    table.innerHTML = movies.map(m => `
+        <tr><td>${m.title}</td><td style="text-align:right"><button onclick="borrar('movies','${m.id}')" style="color:red; background:none; border:none;">X</button></td></tr>
     `).join('');
 }
 
-function borrarMovie(i) {
-    movies.splice(i, 1);
-    localStorage.setItem('neb_m', JSON.stringify(movies));
-    renderMovieTable();
-    actualizarVista();
-}
-
-function guardarUser() {
-    const u = document.getElementById('adm-un').value;
-    const p = document.getElementById('adm-up').value;
-    const d = document.getElementById('adm-ud').value;
-    if(u && p) {
-        users.push({u, p, d});
-        localStorage.setItem('neb_u', JSON.stringify(users));
-        renderUserTable();
-        alert("Usuario Creado");
-    }
-}
-
-function renderUserTable() {
-    const table = document.getElementById('user-list');
-    table.innerHTML = users.map((u, i) => `
-        <tr><td>${u.u}</td><td><button onclick="users.splice(${i},1);localStorage.setItem('neb_u',JSON.stringify(users));renderUserTable()" style="color:red; background:none; border:none; cursor:pointer">X</button></td></tr>
-    `).join('');
-}
-
-// VISTA
-function seleccionarMarca(brand) { currentBrand = brand; actualizarVista(); }
-function cambiarTipo(type) {
-    currentType = type;
-    document.getElementById('t-peli').classList.toggle('active', type === 'pelicula');
-    document.getElementById('t-serie').classList.toggle('active', type === 'serie');
-    actualizarVista();
+// NAVEGACIÓN Y VISTA
+function seleccionarMarca(b) { currentBrand = b; actualizarVista(); }
+function cambiarTipo(t) { 
+    currentType = t; 
+    document.getElementById('t-peli').classList.toggle('active', t === 'pelicula');
+    document.getElementById('t-serie').classList.toggle('active', t === 'serie');
+    actualizarVista(); 
 }
 
 function actualizarVista() {
@@ -106,15 +114,15 @@ function actualizarVista() {
     `).join('');
 }
 
-function reproducir(url, titulo) {
-    document.getElementById('main-iframe').src = url;
-    document.getElementById('player-title').innerText = titulo;
+function abrirAdmin() { if(prompt("PASSWORD:") === "2026") switchScreen('sc-admin'); }
+function switchScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+}
+function cerrarSesion() { window.location.reload(); }
+function reproducir(u, t) {
+    document.getElementById('main-iframe').src = u;
+    document.getElementById('player-title').innerText = t;
     document.getElementById('video-player').classList.remove('hidden');
 }
-
-function cerrarReproductor() {
-    document.getElementById('main-iframe').src = "";
-    document.getElementById('video-player').classList.add('hidden');
-}
-
-function toggleMenu() { document.getElementById('drop-menu').classList.toggle('hidden'); }
+function cerrarReproductor() { document.getElementById('main-iframe').src = ""; document.getElementById('video-player').classList.add('hidden'); }

@@ -4,80 +4,86 @@ let movies = [];
 let currentBrand = 'disney';
 let currentType = 'pelicula';
 
-// --- 1. CARGA E INTELIGENCIA DE SESIÓN ---
+// --- 1. CICLO DE VIDA (INTRO Y CARGA) ---
+window.addEventListener('DOMContentLoaded', () => {
+    // La intro dura 3.8 segundos
+    setTimeout(() => {
+        document.getElementById('intro-screen').classList.add('fade-out');
+        cargarDatos();
+    }, 3800);
+});
+
 async function cargarDatos() {
     try {
         const resU = await fetch(`${firebaseURL}users.json`);
         const dataU = await resU.json();
-        users = dataU ? Object.keys(dataU).map(id => ({ id, ...dataU[id] })) : [{u:'admin', p:'1234', d:'2026-12-31'}];
+        users = dataU ? Object.keys(dataU).map(id => ({ id, ...dataU[id] })) : [{u:'admin', p:'2026'}];
 
         const resM = await fetch(`${firebaseURL}movies.json`);
         const dataM = await resM.json();
         movies = dataM ? Object.keys(dataM).map(id => ({ id, ...dataM[id] })) : [];
 
-        const usuarioActual = localStorage.getItem('usuario_actual');
+        const yo = localStorage.getItem('usuario_actual');
         
-        // Expulsión automática si el usuario fue borrado
-        if (usuarioActual && usuarioActual !== "admin") {
-            const todaviaExiste = users.find(x => x.u === usuarioActual);
+        // SEGURIDAD: Expulsar si el usuario ya no existe en la nube
+        if (yo && yo !== "admin") {
+            const todaviaExiste = users.find(x => x.u === yo);
             if (!todaviaExiste) {
                 localStorage.removeItem('usuario_actual');
-                alert("Sesión expirada.");
                 window.location.reload();
                 return;
             }
         }
 
-        // Auto-login
-        if (usuarioActual && !document.getElementById('sc-login').classList.contains('hidden')) {
-            document.getElementById('u-name').innerText = "Perfil: " + usuarioActual;
+        // AUTO-LOGIN: Si ya tiene sesión, entrar directo al catálogo
+        if (yo && !document.getElementById('sc-login').classList.contains('hidden')) {
+            document.getElementById('u-name').innerText = "Perfil: " + yo;
             switchScreen('sc-main');
         }
 
         actualizarVista();
-    } catch (e) { console.error(e); }
+        
+        if(!document.getElementById('sc-admin').classList.contains('hidden')) {
+            renderUserTable(); renderMovieTable();
+        }
+    } catch (e) { console.error("Error en conexión:", e); }
 }
 
-setInterval(cargarDatos, 7000); // Revisa la nube cada 7 segundos
+// Revisar la nube cada 6 segundos para control de usuarios
+setInterval(cargarDatos, 6000);
 
-// --- 2. NAVEGACIÓN POR CONTROL REMOTO (PARA SMART TV) ---
+// --- 2. MANEJO DE CONTROL REMOTO (SMART TV) ---
 document.addEventListener('keydown', (e) => {
-    // Lista de elementos que pueden recibir el foco
-    const menuItems = document.querySelectorAll('button, input, .poster, select');
-    let currentIndex = Array.from(menuItems).indexOf(document.activeElement);
+    const focusable = document.querySelectorAll('button:not(.hidden), input:not(.hidden), .poster, select');
+    let index = Array.from(focusable).indexOf(document.activeElement);
 
-    switch(e.key) {
-        case "ArrowRight":
-            currentIndex = (currentIndex + 1) % menuItems.length;
-            menuItems[currentIndex].focus();
-            break;
-        case "ArrowLeft":
-            currentIndex = (currentIndex - 1 + menuItems.length) % menuItems.length;
-            menuItems[currentIndex].focus();
-            break;
-        case "ArrowDown":
-            // Salto aproximado de fila en el grid
-            currentIndex = (currentIndex + 4) % menuItems.length;
-            menuItems[currentIndex].focus();
-            break;
-        case "ArrowUp":
-            currentIndex = (currentIndex - 4 + menuItems.length) % menuItems.length;
-            menuItems[currentIndex].focus();
-            break;
-        case "Enter":
-            // Si el foco está en un poster, reproducir al dar OK
-            if (document.activeElement.classList.contains('poster')) {
-                document.activeElement.click();
-            }
-            break;
-        case "Escape":
-        case "Backspace":
-            cerrarReproductor();
-            break;
+    if (e.key === "ArrowRight") { index = (index + 1) % focusable.length; focusable[index].focus(); }
+    if (e.key === "ArrowLeft") { index = (index - 1 + focusable.length) % focusable.length; focusable[index].focus(); }
+    if (e.key === "ArrowDown") { index = (index + 5) % focusable.length; focusable[index].focus(); }
+    if (e.key === "ArrowUp") { index = (index - 5 + focusable.length) % focusable.length; focusable[index].focus(); }
+    
+    // Al pulsar Enter en un poster, reproducir
+    if (e.key === "Enter" && document.activeElement.classList.contains('poster')) {
+        document.activeElement.click();
+    }
+    
+    // Volver atrás con Backspace (común en controles remotos)
+    if (e.key === "Backspace" || e.key === "Escape") { 
+        cerrarReproductor(); 
     }
 });
 
-// --- 3. FUNCIONES DE SIEMPRE (ADAPTADAS) ---
+// --- 3. BOTÓN SECRETO ADMIN ---
+function abrirAdmin() {
+    const pass = prompt("PASSWORD ADMIN:");
+    if(pass === "2026") {
+        switchScreen('sc-admin');
+        renderUserTable();
+        renderMovieTable();
+    }
+}
+
+// --- 4. LÓGICA DE NAVEGACIÓN ---
 function entrar() {
     const u = document.getElementById('log-u').value;
     const p = document.getElementById('log-p').value;
@@ -85,50 +91,85 @@ function entrar() {
     if(user) {
         localStorage.setItem('usuario_actual', u);
         window.location.reload();
-    } else { alert("Datos incorrectos"); }
+    } else { alert("Usuario o PIN incorrecto"); }
 }
 
 function actualizarVista() {
     const grid = document.getElementById('grid');
     if(!grid) return;
-    
     document.getElementById('cat-title').innerText = currentBrand.toUpperCase() + " > " + currentType.toUpperCase();
     const filtrados = movies.filter(m => m.brand === currentBrand && m.type === currentType);
     
-    // IMPORTANTE: Añadimos tabindex="0" para que el control remoto vea los posters
+    // Tabindex="0" permite que el control remoto "vea" los posters
     grid.innerHTML = filtrados.map(m => `
-        <div class="poster" 
-             tabindex="0" 
-             style="background-image:url('${m.poster}')" 
-             onclick="reproducir('${m.video}', '${m.title}')">
-        </div>
+        <div class="poster" tabindex="0" style="background-image:url('${m.poster}')" 
+             onclick="reproducir('${m.video}', '${m.title}')"></div>
     `).join('');
 }
 
-// ... (Aquí mantienes tus funciones de abrirAdmin, guardarUser, borrarMovie, etc.)
-// Asegúrate de incluir las funciones de soporte que ya tenías abajo.
+// --- 5. FUNCIONES ADMIN ---
+async function guardarContenido() {
+    const title = document.getElementById('c-title').value;
+    const poster = document.getElementById('c-post').value;
+    const video = document.getElementById('c-video').value;
+    const brand = document.getElementById('c-brand').value;
+    const type = document.getElementById('c-type').value;
+    if(title && poster && video) {
+        await fetch(`${firebaseURL}movies.json`, { method: 'POST', body: JSON.stringify({title, poster, video, brand, type}) });
+        alert("Publicado!"); cargarDatos();
+    }
+}
 
+async function guardarUser() {
+    const u = document.getElementById('adm-un').value;
+    const p = document.getElementById('adm-up').value;
+    const d = document.getElementById('adm-ud').value;
+    if(u && p && d) {
+        await fetch(`${firebaseURL}users.json`, { method: 'POST', body: JSON.stringify({u, p, d}) });
+        alert("Usuario Creado"); cargarDatos();
+    }
+}
+
+async function borrarUser(id) {
+    if(confirm("¿Eliminar usuario?")) {
+        await fetch(`${firebaseURL}users/${id}.json`, { method: 'DELETE' });
+        cargarDatos();
+    }
+}
+
+async function borrarMovie(id) {
+    if(confirm("¿Eliminar contenido?")) {
+        await fetch(`${firebaseURL}movies/${id}.json`, { method: 'DELETE' });
+        cargarDatos();
+    }
+}
+
+// --- 6. UTILIDADES ---
 function switchScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
 }
 
-function reproducir(url, titulo) {
+function cerrarSesion() { localStorage.removeItem('usuario_actual'); window.location.reload(); }
+function toggleMenu() { document.getElementById('drop-menu').classList.toggle('hidden'); }
+function seleccionarMarca(b) { currentBrand = b; actualizarVista(); }
+function cambiarTipo(t) { 
+    currentType = t; 
+    document.getElementById('t-peli').classList.toggle('active', t==='pelicula');
+    document.getElementById('t-serie').classList.toggle('active', t==='serie');
+    actualizarVista(); 
+}
+
+function reproducir(u, t) {
     const player = document.getElementById('video-player');
-    const iframe = document.getElementById('main-iframe');
-    iframe.src = url;
-    document.getElementById('player-title').innerText = titulo;
+    document.getElementById('main-iframe').src = u;
+    document.getElementById('player-title').innerText = t;
     player.classList.remove('hidden');
-    // Al abrir el video, darle el foco al botón de cerrar para que el control pueda salir
+    // Dar foco al botón cerrar para control remoto
     setTimeout(() => { document.querySelector('.close-player').focus(); }, 500);
 }
 
-function cerrarReproductor() {
-    document.getElementById('main-iframe').src = "";
-    document.getElementById('video-player').classList.add('hidden');
+function cerrarReproductor() { 
+    document.getElementById('main-iframe').src = ""; 
+    document.getElementById('video-player').classList.add('hidden'); 
 }
-
-function seleccionarMarca(b) { currentBrand = b; actualizarVista(); }
-function cambiarTipo(t) { currentType = t; actualizarVista(); }
-
-cargarDatos();

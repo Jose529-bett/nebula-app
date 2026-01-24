@@ -1,133 +1,109 @@
-const firebaseURL = "https://nebula-plus-app-default-rtdb.firebaseio.com/";
-
-let users = [];
-let movies = [];
-let currentBrand = 'disney';
-let currentType = 'pelicula';
-
-window.onload = () => {
-    setTimeout(() => {
-        document.getElementById('intro-screen').classList.add('fade-out');
-        cargarDesdeFirebase();
-    }, 3500);
-};
-
-async function cargarDesdeFirebase() {
-    try {
-        const resU = await fetch(`${firebaseURL}users.json`);
-        const dataU = await resU.json();
-        users = dataU ? Object.keys(dataU).map(id => ({ id, ...dataU[id] })) : [];
-
-        const resM = await fetch(`${firebaseURL}movies.json`);
-        const dataM = await resM.json();
-        movies = dataM ? Object.keys(dataM).map(id => ({ id, ...dataM[id] })) : [];
-
-        actualizarVista();
-        renderTablas();
-    } catch (e) { console.error("Error Firebase"); }
+:root {
+    --bg-dark: #040714;
+    --disney-blue: #0063e5;
+    --glass: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --text-main: #f9f9f9;
 }
 
-// BUSCADOR FUNCIONANDO
-function buscar() {
-    const q = document.getElementById('search-box').value.toLowerCase();
-    const filtrados = movies.filter(m => m.title.toLowerCase().includes(q));
-    const grid = document.getElementById('grid');
-    grid.innerHTML = filtrados.map(m => `
-        <div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}','${m.title}')"></div>
-    `).join('');
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    overflow-x: hidden;
 }
 
-// FILTROS MARCA Y TIPO
-function seleccionarMarca(b) {
-    currentBrand = b;
-    actualizarVista();
+/* EFECTO GLASSMORPISM (ESTILO DISNEY+) */
+.glass-card {
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px; /* Disney usa esquinas menos curvas y más elegantes */
+    padding: 40px;
+    width: 90%;
+    max-width: 400px;
+    margin: 50px auto;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    text-align: center;
 }
 
-function cambiarTipo(t) {
-    currentType = t;
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('t-' + t).classList.add('active');
-    actualizarVista();
+/* INPUTS PROFESIONALES */
+input, select {
+    width: 100%;
+    background: #31343e;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 12px 15px;
+    color: white;
+    margin: 10px 0;
+    font-size: 14px;
+    transition: 0.3s;
 }
 
-function actualizarVista() {
-    const grid = document.getElementById('grid');
-    // Filtra por marca Y por tipo (pelicula o serie)
-    const filtrados = movies.filter(m => m.brand === currentBrand && m.type === currentType);
-    grid.innerHTML = filtrados.map(m => `
-        <div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}','${m.title}')"></div>
-    `).join('');
+input:focus {
+    border-color: #f9f9f9;
+    outline: none;
+    background: #3e4250;
 }
 
-// REPRODUCTOR
-function reproducir(v, t) {
-    document.getElementById('p-title').innerText = t;
-    document.getElementById('main-iframe').src = v;
-    document.getElementById('video-player').classList.remove('hidden');
+/* BOTÓN DISNEY AZUL */
+.btn-disney {
+    width: 100%;
+    background: var(--disney-blue);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 4px;
+    font-weight: bold;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: 0.3s;
 }
 
-function cerrarReproductor() {
-    document.getElementById('main-iframe').src = "";
-    document.getElementById('video-player').classList.add('hidden');
+.btn-disney:hover {
+    background: #0483ee;
+    transform: scale(1.02);
 }
 
-// LOGIN Y ADMIN
-function entrar() {
-    const u = document.getElementById('log-u').value;
-    const p = document.getElementById('log-p').value;
-    const ok = users.find(x => x.u === u && x.p === p);
-    if(ok) {
-        document.getElementById('u-display').innerText = "Usuario: " + u;
-        switchScreen('sc-main');
-    } else { alert("Datos incorrectos"); }
+/* TABLAS MODERNAS (NO MÁS BORDES BLANCOS) */
+.modern-table {
+    margin-top: 20px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 6px;
+    overflow: hidden;
 }
 
-function renderTablas() {
-    document.getElementById('user-table').innerHTML = users.map(u => `
-        <tr><td>${u.u}</td><td>${u.d || '---'}</td><td><button class="btn-del" onclick="borrar('users','${u.id}')">X</button></td></tr>
-    `).join('');
-    document.getElementById('movie-table').innerHTML = movies.map(m => `
-        <tr><td>${m.title}</td><td>${m.brand}</td><td><button class="btn-del" onclick="borrar('movies','${m.id}')">X</button></td></tr>
-    `).join('');
+.table-head {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    background: rgba(255,255,255,0.05);
+    padding: 10px;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #a8a8a8;
 }
 
-async function borrar(n, id) {
-    if(confirm("¿Eliminar?")) {
-        await fetch(`${firebaseURL}${n}/${id}.json`, { method: 'DELETE' });
-        cargarDesdeFirebase();
-    }
+.table-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--glass-border);
+    align-items: center;
+    font-size: 13px;
 }
 
-// NAVEGACIÓN
-function toggleMenu() { document.getElementById('drop-menu').classList.toggle('hidden'); }
-function abrirAdmin() { if(prompt("CLAVE:") === "2026") switchScreen('sc-admin'); }
-function cerrarSesion() { window.location.reload(); }
-function switchScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
+.btn-del-pro {
+    color: #ff4d4d;
+    background: none;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 11px;
 }
 
-// GUARDADO
-async function guardarUser() {
-    const u = document.getElementById('adm-un').value;
-    const p = document.getElementById('adm-up').value;
-    const d = document.getElementById('adm-ud').value;
-    if(u && p) {
-        await fetch(`${firebaseURL}users.json`, { method: 'POST', body: JSON.stringify({u,p,d}) });
-        cargarDesdeFirebase();
-        alert("Usuario creado");
-    }
-}
-
-async function guardarContenido() {
-    const title = document.getElementById('c-title').value;
-    const poster = document.getElementById('c-post').value;
-    const video = document.getElementById('c-video').value;
-    const brand = document.getElementById('c-brand').value;
-    const type = document.getElementById('c-type').value;
-    if(title && video) {
-        await fetch(`${firebaseURL}movies.json`, { method: 'POST', body: JSON.stringify({title, poster, video, brand, type}) });
-        cargarDesdeFirebase();
-        alert("Publicado");
-    }
-}
+/* INTRO Y LOGO */
+.logo-text { font-size: 2.5rem; margin-bottom: 5px; letter-spacing: 4px; }
+.logo-text span { color: var(--disney-blue); }
+.subtitle { color: #a8a8a8; margin-bottom: 30px; font-size: 14px; }

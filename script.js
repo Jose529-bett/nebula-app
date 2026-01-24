@@ -3,126 +3,192 @@ const firebaseURL = "https://nebula-plus-default-rtdb.firebaseio.com/";
 
 let users = [];
 let movies = [];
+let currentBrand = 'disney';
+let currentType = 'pelicula';
 
 // --- 1. CARGA INICIAL (Sincroniza con Firebase) ---
 async function cargarDatos() {
     try {
-        // Cargar Usuarios
+        // Cargar Usuarios desde la nube
         const resUsers = await fetch(`${firebaseURL}users.json`);
         const dataUsers = await resUsers.json();
-        // Mapeamos para obtener el ID de Firebase (necesario para borrar)
         users = dataUsers ? Object.keys(dataUsers).map(id => ({
-            id: id, u: dataUsers[id].u, p: dataUsers[id].p 
-        })) : [{u:'admin', p:'2026'}];
+            id: id, u: dataUsers[id].u, p: dataUsers[id].p, d: dataUsers[id].d 
+        })) : [{u:'admin', p:'1234', d:'2026-12-31'}];
 
-        // Cargar Películas y Series
+        // Cargar Películas/Series desde la nube
         const resMovies = await fetch(`${firebaseURL}movies.json`);
         const dataMovies = await resMovies.json();
-        movies = dataMovies ? Object.values(dataMovies) : [];
+        movies = dataMovies ? Object.keys(dataMovies).map(id => ({
+            id: id, ...dataMovies[id]
+        })) : [];
 
         actualizarVista();
     } catch (error) {
-        console.error("Error de conexión:", error);
+        console.error("Error sincronizando:", error);
     }
 }
 
-// --- 2. GESTIÓN DE CONTENIDO (SUBIR PELIS/SERIES) ---
-async function guardarContenido() {
-    const nuevaPeli = {
-        title: document.getElementById('c-title').value,
-        poster: document.getElementById('c-post').value,
-        video: document.getElementById('c-video').value,
-        brand: document.getElementById('c-brand').value, // Disney, Netflix, etc.
-        type: document.getElementById('c-type').value    // Película o Serie
-    };
+// --- 2. LOGIN Y NAVEGACIÓN ---
+function entrar() {
+    const u = document.getElementById('log-u').value;
+    const p = document.getElementById('log-p').value;
+    const user = users.find(x => x.u === u && x.p === p);
 
-    if(nuevaPeli.title && nuevaPeli.poster && nuevaPeli.video) {
+    if(user) {
+        document.getElementById('u-name').innerText = "Perfil: " + u;
+        switchScreen('sc-main');
+        actualizarVista();
+    } else { alert("Usuario no encontrado"); }
+}
+
+function switchScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+}
+
+function cerrarSesion() {
+    document.getElementById('drop-menu').classList.add('hidden');
+    switchScreen('sc-login');
+}
+
+function toggleMenu() { document.getElementById('drop-menu').classList.toggle('hidden'); }
+
+// --- 3. REPRODUCTOR ---
+function reproducir(url, titulo) {
+    const player = document.getElementById('video-player');
+    const iframe = document.getElementById('main-iframe');
+    const titleDisp = document.getElementById('player-title');
+    iframe.src = url;
+    titleDisp.innerText = titulo;
+    player.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function cerrarReproductor() {
+    const player = document.getElementById('video-player');
+    const iframe = document.getElementById('main-iframe');
+    iframe.src = "";
+    player.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// --- 4. PANEL ADMIN (BOTÓN SECRETO) ---
+function abrirAdmin() {
+    if(prompt("PASSWORD ADMIN:") === "2026") {
+        switchScreen('sc-admin');
+        renderUserTable();
+        renderMovieTable();
+    }
+}
+
+// --- 5. GESTIÓN DE CONTENIDO (NUBE) ---
+async function guardarContenido() {
+    const title = document.getElementById('c-title').value;
+    const poster = document.getElementById('c-post').value;
+    const video = document.getElementById('c-video').value;
+    const brand = document.getElementById('c-brand').value;
+    const type = document.getElementById('c-type').value;
+
+    if(title && poster && video) {
+        const nuevaPeli = {title, poster, video, brand, type};
         await fetch(`${firebaseURL}movies.json`, {
             method: 'POST',
             body: JSON.stringify(nuevaPeli)
         });
-        alert("¡" + nuevaPeli.title + " publicada con éxito!");
-        location.reload(); 
-    } else {
-        alert("Por favor, completa los campos obligatorios.");
+        
+        document.getElementById('c-title').value = "";
+        document.getElementById('c-post').value = "";
+        document.getElementById('c-video').value = "";
+        
+        alert("Publicado en la nube!");
+        await cargarDatos(); // Refrescar lista
+        renderMovieTable();
     }
 }
 
-// --- 3. GESTIÓN DE USUARIOS (REGISTRAR/BORRAR) ---
-async function registrarNuevoUsuario() {
-    const u = document.getElementById('reg-user').value;
-    const p = document.getElementById('reg-pass').value;
+async function borrarMovie(id) {
+    if(confirm("¿Eliminar contenido?")) {
+        await fetch(`${firebaseURL}movies/${id}.json`, { method: 'DELETE' });
+        await cargarDatos();
+        renderMovieTable();
+    }
+}
+
+function renderMovieTable() {
+    const table = document.getElementById('movie-list');
+    let html = `<tr><th>Título</th><th>Marca</th><th>X</th></tr>`;
+    movies.forEach((m) => {
+        html += `<tr><td>${m.title}</td><td>${m.brand}</td><td><button onclick="borrarMovie('${m.id}')" style="color:red">X</button></td></tr>`;
+    });
+    table.innerHTML = html;
+}
+
+// --- 6. GESTIÓN DE USUARIOS (NUBE) ---
+async function guardarUser() {
+    const u = document.getElementById('adm-un').value;
+    const p = document.getElementById('adm-up').value;
+    const d = document.getElementById('adm-ud').value;
     
-    if(u && p) {
+    if(u && p && d) {
         await fetch(`${firebaseURL}users.json`, {
             method: 'POST',
-            body: JSON.stringify({ u: u, p: p })
+            body: JSON.stringify({u, p, d})
         });
-        alert("Usuario " + u + " registrado.");
-        cargarDatos();
+        alert("Usuario creado en la nube");
+        await cargarDatos();
+        renderUserTable();
     }
 }
 
-async function eliminarUsuario() {
-    const u = document.getElementById('reg-user').value;
-    const encontrado = users.find(user => user.u === u);
-    
-    if (encontrado && encontrado.id) {
-        if(confirm("¿Seguro que quieres eliminar a " + u + "?")) {
-            await fetch(`${firebaseURL}users/${encontrado.id}.json`, { method: 'DELETE' });
-            alert("Usuario eliminado.");
-            cargarDatos();
-        }
-    } else {
-        alert("Usuario no encontrado.");
+async function borrarUser(id) {
+    if(confirm("¿Eliminar usuario?")) {
+        await fetch(`${firebaseURL}users/${id}.json`, { method: 'DELETE' });
+        await cargarDatos();
+        renderUserTable();
     }
 }
 
-// --- 4. BOTÓN INVISIBLE Y ACCESO ADMIN ---
-function activarBotonSecreto() {
-    const pass = prompt("Acceso Restringido. Ingrese el PIN:");
-    if (pass === "2026") {
-        // Asegúrate que en tu HTML el panel tenga id="admin-panel"
-        document.getElementById('admin-panel').style.display = 'block';
-        alert("Panel de Control Abierto");
-    } else {
-        alert("PIN Incorrecto");
-    }
-}
-
-// --- 5. LOGIN DE USUARIOS ---
-function login() {
-    const u = document.getElementById('user').value;
-    const p = document.getElementById('pass').value;
-    
-    const coincidencia = users.find(user => user.u === u && user.p === p);
-    
-    if (coincidencia) {
-        document.getElementById('login-screen').style.display = 'none';
-    } else {
-        alert("Usuario o contraseña no válidos");
-    }
-}
-
-// --- 6. RENDERIZADO EN PANTALLA ---
-function actualizarVista() {
-    const container = document.getElementById('movies-container');
-    if(!container) return;
-    container.innerHTML = '';
-
-    movies.forEach(m => {
-        const card = document.createElement('div');
-        card.className = 'movie-card';
-        card.innerHTML = `
-            <img src="${m.poster}" onclick="window.location.href='${m.video}'">
-            <div class="card-info">
-                <h4>${m.title}</h4>
-                <small>${m.brand} | ${m.type}</small>
-            </div>
-        `;
-        container.appendChild(card);
+function renderUserTable() {
+    const table = document.getElementById('user-list');
+    let html = `<tr><th>Usuario</th><th>X</th></tr>`;
+    users.forEach((u) => {
+        html += `<tr><td>${u.u}</td><td><button onclick="borrarUser('${u.id}')" style="color:red">X</button></td></tr>`;
     });
+    table.innerHTML = html;
 }
 
-// INICIAR APP
+// --- 7. MOTOR DE VISTA ---
+function seleccionarMarca(brand) {
+    currentBrand = brand;
+    actualizarVista();
+}
+
+function cambiarTipo(type) {
+    currentType = type;
+    document.getElementById('t-peli').classList.toggle('active', type === 'pelicula');
+    document.getElementById('t-serie').classList.toggle('active', type === 'serie');
+    actualizarVista();
+}
+
+function actualizarVista() {
+    const grid = document.getElementById('grid');
+    if(!grid) return;
+    document.getElementById('cat-title').innerText = currentBrand.toUpperCase() + " > " + currentType.toUpperCase();
+    
+    const filtrados = movies.filter(m => m.brand === currentBrand && m.type === currentType);
+    
+    grid.innerHTML = filtrados.map(m => `
+        <div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>
+    `).join('');
+}
+
+function buscar() {
+    const q = document.getElementById('search-box').value.toLowerCase();
+    const grid = document.getElementById('grid');
+    const filtered = movies.filter(m => m.title.toLowerCase().includes(q));
+    grid.innerHTML = filtered.map(m => `<div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>`).join('');
+}
+
+// INICIAR CARGA
 cargarDatos();

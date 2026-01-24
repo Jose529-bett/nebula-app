@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -11,90 +11,58 @@
 
     <div class="admin-trigger" onclick="abrirAdmin()"></div>
 
-    <div id="intro-screen">
-        <div class="intro-content">
-            <h1 class="intro-logo">NEBULA<span>+</span></h1>
-            <div class="intro-arc"></div>
-        </div>
-    </div>
-
     <div id="sc-login" class="screen">
         <div class="glass-card">
             <h1 class="logo-text">NEBULA<span>+</span></h1>
             <p class="subtitle">Inicia sesión con tu cuenta</p>
-            <div class="input-group">
-                <input type="text" id="log-u" placeholder="Usuario o correo">
-                <input type="password" id="log-p" placeholder="Contraseña">
-            </div>
+            <input type="text" id="log-u" placeholder="Usuario">
+            <input type="password" id="log-p" placeholder="PIN">
             <button class="btn-disney" onclick="entrar()">INICIAR SESIÓN</button>
-            <p class="foot-note">¿Olvidaste tu PIN? Contacta a soporte.</p>
-        </div>
-    </div>
-
-    <div id="sc-admin" class="screen hidden">
-        <div class="admin-header">
-            <h2 class="logo-s">NEBULA<span>+</span> Panel</h2>
-            <button class="btn-close" onclick="cerrarPanel()">CERRAR</button>
-        </div>
-        
-        <div class="admin-scroll-container">
-            <div class="glass-card admin-box">
-                <h3>Gestión de Clientes</h3>
-                <input type="text" id="adm-un" placeholder="Nombre del Cliente">
-                <input type="text" id="adm-up" placeholder="PIN de Acceso">
-                <input type="date" id="adm-ud">
-                <button class="btn-disney" onclick="guardarUser()">+ CREAR NUEVO USUARIO</button>
-                
-                <div class="modern-table">
-                    <div class="table-head">
-                        <span>Usuario</span>
-                        <span>Vence</span>
-                        <span>Acción</span>
-                    </div>
-                    <div id="user-table" class="table-body"></div>
-                </div>
-            </div>
-
-            <div class="glass-card admin-box">
-                <h3>Biblioteca de Contenido</h3>
-                <input type="text" id="c-title" placeholder="Título de la obra">
-                <input type="text" id="c-post" placeholder="URL Poster">
-                <input type="text" id="c-video" placeholder="URL Video">
-                <div class="form-row">
-                    <select id="c-brand">
-                        <option value="disney">Disney</option>
-                        <option value="netflix">Netflix</option>
-                        <option value="hbo">HBO Max</option>
-                        <option value="paramount">Paramount+</option>
-                        <option value="apple">Apple TV</option>
-                    </select>
-                    <select id="c-type">
-                        <option value="pelicula">Película</option>
-                        <option value="serie">Serie</option>
-                    </select>
-                </div>
-                <button class="btn-disney" onclick="guardarContenido()">PUBLICAR AHORA</button>
-                
-                <div class="modern-table">
-                    <div class="table-head">
-                        <span>Título</span>
-                        <span>Categoría</span>
-                        <span>Acción</span>
-                    </div>
-                    <div id="movie-table" class="table-body"></div>
-                </div>
-            </div>
         </div>
     </div>
 
     <div id="sc-main" class="screen hidden">
-        <nav class="nav-main">
-            <span class="logo-s">NEBULA<span>+</span></span>
-            <button class="btn-close" onclick="cerrarSesion()">SALIR</button>
-        </nav>
+        <header class="main-header">
+            <div class="header-top">
+                <h1 class="logo-s">NEBULA<span>+</span></h1>
+                <div class="user-menu">
+                    <input type="text" id="search-bar" placeholder="Buscar..." oninput="filtrarContenido()">
+                    <button class="btn-logout" onclick="cerrarSesion()">CERRAR SESIÓN</button>
+                </div>
+            </div>
+
+            <div class="brand-grid">
+                <div class="brand-box" onclick="seleccionarMarca('disney')"><img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Disney%2B_logo.svg"></div>
+                <div class="brand-box" onclick="seleccionarMarca('netflix')"><img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg"></div>
+                <div class="brand-box" onclick="seleccionarMarca('hbo')"><img src="https://upload.wikimedia.org/wikipedia/commons/d/de/HBO_logo.svg"></div>
+                <div class="brand-box" onclick="seleccionarMarca('paramount')"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Paramount_Plus_logo.svg"></div>
+                <div class="brand-box" onclick="seleccionarMarca('espn')"><img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/ESPN_wordmark.svg"></div>
+                <div class="brand-box" onclick="seleccionarMarca('natgeo')"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6a/National_Geographic_logo.svg"></div>
+            </div>
+        </header>
+
+        <div id="type-selector" class="type-bar hidden">
+            <button onclick="filtrarTipo('pelicula')">PELÍCULAS</button>
+            <button onclick="filtrarTipo('serie')">SERIES</button>
+            <button class="btn-back" onclick="volverAMarcas()">← VOLVER</button>
+        </div>
+
         <div id="grid" class="movie-grid"></div>
     </div>
+
+    <div id="video-player" class="player-overlay hidden">
+        <div class="player-controls">
+            <h3 id="now-playing">Título</h3>
+            <button onclick="cerrarPlayer()">✕ CERRAR</button>
+        </div>
+        <div class="video-wrapper">
+            <iframe id="main-iframe" src="" frameborder="0" allowfullscreen allow="autoplay"></iframe>
+        </div>
+    </div>
+
+    <div id="sc-admin" class="screen hidden">...</div>
 
     <script src="script.js"></script>
 </body>
 </html>
+                     

@@ -1,185 +1,126 @@
-// CONFIGURACIÓN DE TU NUBE EN FIREBASE
 const firebaseURL = "https://nebula-plus-default-rtdb.firebaseio.com/";
-
 let users = [];
 let movies = [];
 let currentBrand = 'disney';
 let currentType = 'pelicula';
 
-// --- 1. CARGA INICIAL Y AUTO-LOGIN ---
+// --- 1. CARGA E INTELIGENCIA DE SESIÓN ---
 async function cargarDatos() {
     try {
-        // Traer Usuarios de la nube
         const resU = await fetch(`${firebaseURL}users.json`);
         const dataU = await resU.json();
         users = dataU ? Object.keys(dataU).map(id => ({ id, ...dataU[id] })) : [{u:'admin', p:'1234', d:'2026-12-31'}];
 
-        // Traer Películas de la nube
         const resM = await fetch(`${firebaseURL}movies.json`);
         const dataM = await resM.json();
         movies = dataM ? Object.keys(dataM).map(id => ({ id, ...dataM[id] })) : [];
 
-        // --- LÓGICA DE PERSISTENCIA (MANTENER SESIÓN) ---
-        const usuarioGuardado = localStorage.getItem('usuario_actual');
-        if (usuarioGuardado) {
-            const existe = users.find(x => x.u === usuarioGuardado);
-            // Si el usuario existe en la nube o es el admin, entra directo
-            if (existe || usuarioGuardado === "admin") {
-                document.getElementById('u-name').innerText = "Perfil: " + usuarioGuardado;
-                switchScreen('sc-main'); 
-            } else {
-                // Si lo borraste de la nube, le quitamos el acceso automático
+        const usuarioActual = localStorage.getItem('usuario_actual');
+        
+        // Expulsión automática si el usuario fue borrado
+        if (usuarioActual && usuarioActual !== "admin") {
+            const todaviaExiste = users.find(x => x.u === usuarioActual);
+            if (!todaviaExiste) {
                 localStorage.removeItem('usuario_actual');
+                alert("Sesión expirada.");
+                window.location.reload();
+                return;
             }
         }
 
-        actualizarVista();
-        
-        // Refrescar tablas si el admin está dentro
-        if(!document.getElementById('sc-admin').classList.contains('hidden')) {
-            renderUserTable();
-            renderMovieTable();
+        // Auto-login
+        if (usuarioActual && !document.getElementById('sc-login').classList.contains('hidden')) {
+            document.getElementById('u-name').innerText = "Perfil: " + usuarioActual;
+            switchScreen('sc-main');
         }
-    } catch (e) { console.error("Error de conexión:", e); }
+
+        actualizarVista();
+    } catch (e) { console.error(e); }
 }
 
-// Revisar la nube cada 10 segundos para detectar cambios o expulsiones
-setInterval(cargarDatos, 10000);
+setInterval(cargarDatos, 7000); // Revisa la nube cada 7 segundos
 
-// --- 2. LOGIN Y NAVEGACIÓN ---
+// --- 2. NAVEGACIÓN POR CONTROL REMOTO (PARA SMART TV) ---
+document.addEventListener('keydown', (e) => {
+    // Lista de elementos que pueden recibir el foco
+    const menuItems = document.querySelectorAll('button, input, .poster, select');
+    let currentIndex = Array.from(menuItems).indexOf(document.activeElement);
+
+    switch(e.key) {
+        case "ArrowRight":
+            currentIndex = (currentIndex + 1) % menuItems.length;
+            menuItems[currentIndex].focus();
+            break;
+        case "ArrowLeft":
+            currentIndex = (currentIndex - 1 + menuItems.length) % menuItems.length;
+            menuItems[currentIndex].focus();
+            break;
+        case "ArrowDown":
+            // Salto aproximado de fila en el grid
+            currentIndex = (currentIndex + 4) % menuItems.length;
+            menuItems[currentIndex].focus();
+            break;
+        case "ArrowUp":
+            currentIndex = (currentIndex - 4 + menuItems.length) % menuItems.length;
+            menuItems[currentIndex].focus();
+            break;
+        case "Enter":
+            // Si el foco está en un poster, reproducir al dar OK
+            if (document.activeElement.classList.contains('poster')) {
+                document.activeElement.click();
+            }
+            break;
+        case "Escape":
+        case "Backspace":
+            cerrarReproductor();
+            break;
+    }
+});
+
+// --- 3. FUNCIONES DE SIEMPRE (ADAPTADAS) ---
 function entrar() {
     const u = document.getElementById('log-u').value;
     const p = document.getElementById('log-p').value;
     const user = users.find(x => x.u === u && x.p === p);
-    
     if(user) {
-        localStorage.setItem('usuario_actual', u); // Guardar sesión en el cel
-        document.getElementById('u-name').innerText = "Perfil: " + u;
-        switchScreen('sc-main');
-        actualizarVista();
+        localStorage.setItem('usuario_actual', u);
+        window.location.reload();
     } else { alert("Datos incorrectos"); }
 }
 
-function cerrarSesion() {
-    localStorage.removeItem('usuario_actual'); // Olvidar sesión
-    document.getElementById('drop-menu').classList.add('hidden');
-    switchScreen('sc-login');
-}
-
-// --- 3. MOTOR DE VISTA Y SEGURIDAD ---
 function actualizarVista() {
-    // EL GUARDIA: Si el usuario está logueado pero ya no existe en la nube, ¡FUERA!
-    const yo = localStorage.getItem('usuario_actual');
-    if (yo && yo !== "admin") {
-        const todaviaExiste = users.find(x => x.u === yo);
-        if (!todaviaExiste) {
-            alert("Tu cuenta ha sido desactivada.");
-            cerrarSesion();
-            return;
-        }
-    }
-
     const grid = document.getElementById('grid');
     if(!grid) return;
     
     document.getElementById('cat-title').innerText = currentBrand.toUpperCase() + " > " + currentType.toUpperCase();
     const filtrados = movies.filter(m => m.brand === currentBrand && m.type === currentType);
     
+    // IMPORTANTE: Añadimos tabindex="0" para que el control remoto vea los posters
     grid.innerHTML = filtrados.map(m => `
-        <div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>
+        <div class="poster" 
+             tabindex="0" 
+             style="background-image:url('${m.poster}')" 
+             onclick="reproducir('${m.video}', '${m.title}')">
+        </div>
     `).join('');
 }
 
-// --- 4. PANEL DE ADMINISTRACIÓN ---
-function abrirAdmin() {
-    if(prompt("PASSWORD ADMIN:") === "2026") {
-        switchScreen('sc-admin');
-        renderUserTable();
-        renderMovieTable();
-    }
-}
-
-// GUARDAR Y ELIMINAR (NUBE)
-async function guardarContenido() {
-    const title = document.getElementById('c-title').value;
-    const poster = document.getElementById('c-post').value;
-    const video = document.getElementById('c-video').value;
-    const brand = document.getElementById('c-brand').value;
-    const type = document.getElementById('c-type').value;
-
-    if(title && poster && video) {
-        await fetch(`${firebaseURL}movies.json`, {
-            method: 'POST',
-            body: JSON.stringify({title, poster, video, brand, type})
-        });
-        alert("¡Contenido Publicado!");
-        document.getElementById('c-title').value = "";
-        document.getElementById('c-post').value = "";
-        document.getElementById('c-video').value = "";
-        cargarDatos();
-    }
-}
-
-async function guardarUser() {
-    const u = document.getElementById('adm-un').value;
-    const p = document.getElementById('adm-up').value;
-    const d = document.getElementById('adm-ud').value;
-    if(u && p && d) {
-        await fetch(`${firebaseURL}users.json`, { method: 'POST', body: JSON.stringify({u, p, d}) });
-        alert("Usuario " + u + " registrado");
-        document.getElementById('adm-un').value = "";
-        document.getElementById('adm-up').value = "";
-        cargarDatos();
-    }
-}
-
-async function borrarUser(id) {
-    if(confirm("¿Eliminar usuario definitivamente?")) {
-        await fetch(`${firebaseURL}users/${id}.json`, { method: 'DELETE' });
-        cargarDatos();
-    }
-}
-
-async function borrarMovie(id) {
-    if(confirm("¿Eliminar película/serie?")) {
-        await fetch(`${firebaseURL}movies/${id}.json`, { method: 'DELETE' });
-        cargarDatos();
-    }
-}
-
-// --- 5. TABLAS Y REPRODUCTOR ---
-function renderUserTable() {
-    const table = document.getElementById('user-list');
-    let html = `<tr><th>Usuario</th><th>X</th></tr>`;
-    users.forEach(u => {
-        html += `<tr><td>${u.u}</td><td><button onclick="borrarUser('${u.id}')" style="color:red; background:none; border:none; font-weight:bold;">X</button></td></tr>`;
-    });
-    table.innerHTML = html;
-}
-
-function renderMovieTable() {
-    const table = document.getElementById('movie-list');
-    let html = `<tr><th>Título</th><th>Marca</th><th>X</th></tr>`;
-    movies.forEach(m => {
-        html += `<tr><td>${m.title}</td><td>${m.brand}</td><td><button onclick="borrarMovie('${m.id}')" style="color:red; background:none; border:none; font-weight:bold;">X</button></td></tr>`;
-    });
-    table.innerHTML = html;
-}
+// ... (Aquí mantienes tus funciones de abrirAdmin, guardarUser, borrarMovie, etc.)
+// Asegúrate de incluir las funciones de soporte que ya tenías abajo.
 
 function switchScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
 }
 
-function toggleMenu() { document.getElementById('drop-menu').classList.toggle('hidden'); }
-
 function reproducir(url, titulo) {
     const player = document.getElementById('video-player');
     const iframe = document.getElementById('main-iframe');
-    const titleDisp = document.getElementById('player-title');
     iframe.src = url;
-    titleDisp.innerText = titulo;
+    document.getElementById('player-title').innerText = titulo;
     player.classList.remove('hidden');
+    // Al abrir el video, darle el foco al botón de cerrar para que el control pueda salir
+    setTimeout(() => { document.querySelector('.close-player').focus(); }, 500);
 }
 
 function cerrarReproductor() {
@@ -187,20 +128,7 @@ function cerrarReproductor() {
     document.getElementById('video-player').classList.add('hidden');
 }
 
-function seleccionarMarca(brand) { currentBrand = brand; actualizarVista(); }
-function cambiarTipo(type) {
-    currentType = type;
-    document.getElementById('t-peli').classList.toggle('active', type === 'pelicula');
-    document.getElementById('t-serie').classList.toggle('active', type === 'serie');
-    actualizarVista();
-}
+function seleccionarMarca(b) { currentBrand = b; actualizarVista(); }
+function cambiarTipo(t) { currentType = t; actualizarVista(); }
 
-function buscar() {
-    const q = document.getElementById('search-box').value.toLowerCase();
-    const grid = document.getElementById('grid');
-    const filtered = movies.filter(m => m.title.toLowerCase().includes(q));
-    grid.innerHTML = filtered.map(m => `<div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>`).join('');
-}
-
-// INICIAR TODO AL CARGAR LA PÁGINA
 cargarDatos();

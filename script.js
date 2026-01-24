@@ -103,3 +103,27 @@ function actualizarVista() {
 }
 
 cargarDatos();
+// --- LÓGICA DEL BOTÓN SECRETO REUPERADA ---
+let toques = 0;
+
+// Si usabas toques en un área invisible:
+function activarBotonSecreto() {
+    toques++;
+    if (toques >= 5) { // Si eran 5 toques por ejemplo
+        const pass = prompt("Introduce el código de acceso:");
+        if (pass === "2026") {
+            document.getElementById('admin-panel').style.display = 'block';
+        } else {
+            alert("Código incorrecto");
+            toques = 0;
+        }
+    }
+}
+
+// O si usabas un código directo en el login:
+function accesoDirectoAdmin(codigo) {
+    if(codigo === "2026") {
+        document.getElementById('admin-panel').style.display = 'block';
+    }
+}
+

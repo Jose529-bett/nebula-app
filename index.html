@@ -18,9 +18,11 @@
         <div class="glass-card">
             <h1 class="logo-main">NEBULA<span>+</span></h1>
             <p>Ingresa tus credenciales</p>
-            <input type="text" id="log-u" placeholder="Usuario">
-            <input type="password" id="log-p" placeholder="PIN">
-            <button class="btn-primary" onclick="entrar()">INICIAR SESIÓN</button>
+            <div class="login-form">
+                <input type="text" id="log-u" placeholder="Usuario">
+                <input type="password" id="log-p" placeholder="PIN">
+                <button class="btn-primary" onclick="entrar()">INICIAR SESIÓN</button>
+            </div>
         </div>
     </div>
 
@@ -62,25 +64,36 @@
     </div>
 
     <div id="sc-admin" class="screen hidden">
-        <div class="admin-box">
-            <button onclick="switchScreen('sc-login')">VOLVER AL LOGIN</button>
-            <h3>Agregar Contenido</h3>
-            <input type="text" id="c-title" placeholder="Título">
-            <input type="text" id="c-post" placeholder="URL Poster">
-            <input type="text" id="c-video" placeholder="URL Video">
-            <select id="c-brand-sel">
-                <option value="disney">Disney</option>
-                <option value="netflix">Netflix</option>
-                <option value="hbo">HBO</option>
-                <option value="paramount">Paramount</option>
-                <option value="espn">ESPN</option>
-                <option value="natgeo">NatGeo</option>
-            </select>
-            <select id="c-type-sel">
-                <option value="pelicula">Película</option>
-                <option value="serie">Serie</option>
-            </select>
-            <button class="btn-primary" onclick="guardarContenido()">PUBLICAR</button>
+        <div class="admin-container">
+            <header class="admin-nav">
+                <h2>Panel Nebula+</h2>
+                <button onclick="switchScreen('sc-login')">CERRAR</button>
+            </header>
+            
+            <div class="admin-section">
+                <h3>Agregar Contenido</h3>
+                <input type="text" id="c-title" placeholder="Título">
+                <input type="text" id="c-post" placeholder="URL Poster">
+                <input type="text" id="c-video" placeholder="URL Video">
+                <select id="c-brand-sel">
+                    <option value="disney">Disney</option>
+                    <option value="netflix">Netflix</option>
+                    <option value="hbo">HBO Max</option>
+                    <option value="paramount">Paramount</option>
+                    <option value="espn">ESPN</option>
+                    <option value="natgeo">NatGeo</option>
+                </select>
+                <select id="c-type-sel">
+                    <option value="pelicula">Película</option>
+                    <option value="serie">Serie</option>
+                </select>
+                <button class="btn-primary" onclick="guardarContenido()">PUBLICAR AHORA</button>
+            </div>
+
+            <div class="admin-section">
+                <h3>Listado de Contenido</h3>
+                <div id="movie-table" class="modern-table"></div>
+            </div>
         </div>
     </div>
 

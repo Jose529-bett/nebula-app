@@ -10,7 +10,7 @@ let movies = [];
 let currentBrand = 'disney';
 let currentType = 'pelicula';
 
-// --- SYNC FIREBASE (CORRECCIÓN: Actualización en tiempo real) ---
+// --- SYNC EN TIEMPO REAL ---
 onValue(ref(db, 'users'), (s) => {
     const d = s.val();
     users = d ? Object.keys(d).map(k => ({...d[k], id: k})) : [];
@@ -20,47 +20,34 @@ onValue(ref(db, 'users'), (s) => {
 onValue(ref(db, 'movies'), (s) => {
     const d = s.val();
     movies = d ? Object.keys(d).map(k => ({...d[k], id: k})) : [];
-    // Esta llamada garantiza que cuando subas algo, aparezca en todos los dispositivos
-    actualizarVista(); 
+    actualizarVista(); // Esto hace que se refleje en todos los dispositivos al instante
     if(document.getElementById('movie-list')) renderMovieTable();
 });
 
-// --- SISTEMA DE ACCESO ---
+// --- ACCESO ---
 window.entrar = function() {
     const u = document.getElementById('log-u').value;
     const p = document.getElementById('log-p').value;
-    
-    if(u === "admin" && p === "2026") {
-        document.getElementById('u-name').innerText = "Admin Nebula+";
-        switchScreen('sc-main');
-        return;
-    }
-
+    if(u === "admin" && p === "2026") { switchScreen('sc-main'); return; }
     const user = users.find(x => x.u === u && x.p === p);
     if(user) {
-        const hoy = new Date().toISOString().split('T')[0];
-        if(hoy > user.d) return alert("Cuenta expirada. Contacte soporte.");
-        document.getElementById('u-name').innerText = "Hola, " + u;
+        if(new Date().toISOString().split('T')[0] > user.d) return alert("Expirado");
         switchScreen('sc-main');
-    } else { alert("Usuario o PIN incorrectos"); }
+    } else { alert("Error de acceso"); }
 };
 
-window.abrirAdmin = function() {
-    if(prompt("CLAVE MAESTRA:") === "2026") switchScreen('sc-admin');
-};
+window.abrirAdmin = function() { if(prompt("CLAVE:") === "2026") switchScreen('sc-admin'); };
 
 function switchScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
 }
 
-window.cerrarSesion = function() { location.reload(); };
-
-// --- GESTIÓN CONTENIDO ---
+// --- GESTIÓN ---
 window.guardarContenido = function() {
     const title = document.getElementById('c-title').value;
     const poster = document.getElementById('c-post').value;
-    const video = document.getElementById('c-video').value;
+    const video = document.getElementById('c-video').value; // Aquí pones links separados por coma para series
     const brand = document.getElementById('c-brand').value;
     const type = document.getElementById('c-type').value;
 
@@ -74,16 +61,7 @@ window.guardarContenido = function() {
 
 window.borrarMovie = function(id) { if(confirm("¿Eliminar?")) remove(ref(db, `movies/${id}`)); };
 
-window.guardarUser = function() {
-    const u = document.getElementById('adm-un').value;
-    const p = document.getElementById('adm-up').value;
-    const d = document.getElementById('adm-ud').value;
-    if(u && p && d) push(ref(db, 'users'), {u, p, d});
-};
-
-window.borrarUser = function(id) { remove(ref(db, `users/${id}`)); };
-
-// --- MOTOR DE VISTA (DISEÑO ORIGINAL) ---
+// --- VISTA DINÁMICA ---
 window.seleccionarMarca = function(b) { currentBrand = b; actualizarVista(); };
 window.cambiarTipo = function(t) {
     currentType = t;
@@ -97,28 +75,39 @@ function actualizarVista() {
     if(!grid) return;
     document.getElementById('cat-title').innerText = `${currentBrand.toUpperCase()} > ${currentType.toUpperCase()}`;
     const fil = movies.filter(m => m.brand === currentBrand && m.type === currentType);
-    
-    // Volvemos a tu diseño original de posters
-    grid.innerHTML = fil.map(m => `
-        <div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>
-    `).join('');
+    grid.innerHTML = fil.map(m => `<div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>`).join('');
 }
 
-window.buscar = function() {
-    const q = document.getElementById('search-box').value.toLowerCase();
-    const fil = movies.filter(m => m.title.toLowerCase().includes(q));
-    document.getElementById('grid').innerHTML = fil.map(m => `
-        <div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>
-    `).join('');
-};
-
-// --- REPRODUCTOR PRO ---
+// --- REPRODUCTOR CON CAPÍTULOS ESTILO DISNEY+ ---
 window.reproducir = function(url, titulo) {
     const frame = document.getElementById('main-iframe');
-    frame.src = url;
-    document.getElementById('player-title').innerText = titulo;
+    const playerTitle = document.getElementById('player-title');
+    const status = document.getElementById('player-status');
+    
+    // Si la URL tiene comas, es una serie
+    if (url.includes(',')) {
+        const capitulos = url.split(',');
+        status.innerText = "Selecciona un episodio";
+        playerTitle.innerHTML = `${titulo} <div class="lista-episodios">` + 
+            capitulos.map((link, i) => `
+                <button class="btn-ep" onclick="cargarVideo('${link.trim()}', ${i+1})">
+                    <span>▶</span> EP. ${i+1}
+                </button>
+            `).join('') + `</div>`;
+        frame.src = ""; // Espera a que elijan
+    } else {
+        frame.src = url;
+        playerTitle.innerText = titulo;
+        status.innerText = "Reproduciendo Película";
+    }
+
     document.getElementById('video-player').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+};
+
+window.cargarVideo = function(link, num) {
+    document.getElementById('main-iframe').src = link;
+    document.getElementById('player-status').innerText = "Viendo Episodio " + num;
 };
 
 window.cerrarReproductor = function() {
@@ -127,15 +116,11 @@ window.cerrarReproductor = function() {
     document.body.style.overflow = 'auto';
 };
 
-// --- TABLES ---
+// --- TABLAS Y OTROS ---
 function renderMovieTable() {
     let h = `<tr><th>Título</th><th>X</th></tr>`;
     movies.forEach(m => h += `<tr><td>${m.title}</td><td><button onclick="borrarMovie('${m.id}')">✖</button></td></tr>`);
-    if(document.getElementById('movie-list')) document.getElementById('movie-list').innerHTML = h;
+    document.getElementById('movie-list').innerHTML = h;
 }
-function renderUserTable() {
-    let h = `<tr><th>Usuario</th><th>Vence</th><th>X</th></tr>`;
-    users.forEach(u => h += `<tr><td>${u.u}</td><td>${u.d}</td><td><button onclick="borrarUser('${u.id}')">✖</button></td></tr>`);
-    if(document.getElementById('user-list')) document.getElementById('user-list').innerHTML = h;
-}
+window.cerrarSesion = function() { location.reload(); };
 window.toggleMenu = function() { document.getElementById('drop-menu').classList.toggle('hidden'); };

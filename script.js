@@ -24,26 +24,24 @@ onValue(ref(db, 'movies'), (s) => {
     renderMovieTable();
 });
 
-// --- GESTIÓN DE USUARIOS (CORREGIDO Y EXPUESTO AL WINDOW) ---
+// --- GESTIÓN DE USUARIOS (VINCULACIÓN REFORZADA) ---
 window.guardarUser = function() {
-    console.log("Intentando guardar usuario..."); // Esto aparecerá en la consola para saber si funciona
     const u = document.getElementById('adm-un').value;
     const p = document.getElementById('adm-up').value;
     const d = document.getElementById('adm-ud').value;
 
     if(u && p && d) {
-        push(ref(db, 'users'), { u, p, d })
+        const userRef = ref(db, 'users');
+        push(userRef, { u, p, d })
         .then(() => {
             alert("Usuario guardado correctamente");
             document.getElementById('adm-un').value = "";
             document.getElementById('adm-up').value = "";
             document.getElementById('adm-ud').value = "";
         })
-        .catch((error) => {
-            alert("Error de Firebase: " + error.message);
-        });
+        .catch((e) => alert("Error: " + e.message));
     } else {
-        alert("Por favor, completa todos los campos del usuario (Nombre, PIN y Fecha)");
+        alert("Completa todos los campos del usuario");
     }
 };
 
@@ -52,12 +50,13 @@ window.borrarUser = function(id) {
 };
 
 function renderUserTable() {
+    const table = document.getElementById('user-list');
+    if(!table) return;
     let h = `<tr><th>Usuario</th><th>Vence</th><th>X</th></tr>`;
     users.forEach(u => {
-        h += `<tr><td>${u.u}</td><td>${u.d}</td><td><button onclick="borrarUser('${u.id}')">✖</button></td></tr>`;
+        h += `<tr><td>${u.u}</td><td>${u.d}</td><td><button onclick="borrarUser('${u.id}')" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">✖</button></td></tr>`;
     });
-    const table = document.getElementById('user-list');
-    if(table) table.innerHTML = h;
+    table.innerHTML = h;
 }
 
 // --- SISTEMA DE ACCESO ---
@@ -68,12 +67,14 @@ window.entrar = function() {
     const user = users.find(x => x.u === u && x.p === p);
     if(user) {
         if(new Date().toISOString().split('T')[0] > user.d) return alert("Cuenta expirada");
+        document.getElementById('u-name').innerText = "Hola, " + u;
         switchScreen('sc-main');
     } else { alert("Acceso denegado"); }
 };
 
 window.abrirAdmin = function() {
-    if(prompt("CLAVE MAESTRA:") === "2026") switchScreen('sc-admin');
+    const pass = prompt("CLAVE MAESTRA:");
+    if(pass === "2026") switchScreen('sc-admin');
 };
 
 function switchScreen(id) {
@@ -90,20 +91,25 @@ window.guardarContenido = function() {
     const type = document.getElementById('c-type').value;
 
     if(title && poster && video) {
-        push(ref(db, 'movies'), {title, poster, video, brand, type});
-        document.getElementById('c-title').value = "";
-        document.getElementById('c-post').value = "";
-        document.getElementById('c-video').value = "";
+        push(ref(db, 'movies'), {title, poster, video, brand, type})
+        .then(() => {
+            document.getElementById('c-title').value = "";
+            document.getElementById('c-post').value = "";
+            document.getElementById('c-video').value = "";
+        });
     }
 };
 
 window.borrarMovie = function(id) { if(confirm("¿Eliminar?")) remove(ref(db, `movies/${id}`)); };
 
 function renderMovieTable() {
-    let h = `<tr><th>Título</th><th>X</th></tr>`;
-    movies.forEach(m => h += `<tr><td>${m.title}</td><td><button onclick="borrarMovie('${m.id}')">✖</button></td></tr>`);
     const table = document.getElementById('movie-list');
-    if(table) table.innerHTML = h;
+    if(!table) return;
+    let h = `<tr><th>Título</th><th>X</th></tr>`;
+    movies.forEach(m => {
+        h += `<tr><td>${m.title}</td><td><button onclick="borrarMovie('${m.id}')" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">✖</button></td></tr>`;
+    });
+    table.innerHTML = h;
 }
 
 // --- MOTOR DE VISTA ---
@@ -127,14 +133,18 @@ function actualizarVista() {
 window.reproducir = function(url, titulo) {
     const frame = document.getElementById('main-iframe');
     const playerTitle = document.getElementById('player-title');
+    const status = document.getElementById('player-status');
+    
     if (url.includes(',')) {
         const caps = url.split(',');
+        status.innerText = "Selecciona un episodio:";
         playerTitle.innerHTML = `${titulo} <div class="lista-episodios">` + 
             caps.map((l, i) => `<button class="btn-ep" onclick="cargarVideo('${l.trim()}', ${i+1})">▶ EP. ${i+1}</button>`).join('') + `</div>`;
         frame.src = "";
     } else {
         frame.src = url;
         playerTitle.innerText = titulo;
+        status.innerText = "Reproduciendo ahora...";
     }
     document.getElementById('video-player').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -142,7 +152,7 @@ window.reproducir = function(url, titulo) {
 
 window.cargarVideo = function(l, n) {
     document.getElementById('main-iframe').src = l;
-    document.getElementById('player-status').innerText = "Episodio " + n;
+    document.getElementById('player-status').innerText = "Viendo Episodio " + n;
 };
 
 window.cerrarReproductor = function() {

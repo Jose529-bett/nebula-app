@@ -1,63 +1,179 @@
- <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nebula+</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+const fbURL = "https://nebula-plus-app-default-rtdb.firebaseio.com/";
+let users = [];
+let movies = [];
+let currentBrand = 'disney';
+let currentType = 'pelicula';
 
-    <div id="sc-login" class="screen">
-        <div class="login-box">
-            <h1 class="logo">NEBULA<span>+</span></h1>
-            <input type="text" id="log-u" placeholder="Usuario">
-            <input type="password" id="log-p" placeholder="PIN">
-            <button class="btn-primary" onclick="entrar()">INICIAR SESIÓN</button>
-        </div>
-    </div>
+// Cargar datos al iniciar
+window.onload = () => { cargarDatos(); };
 
-    <div id="sc-main" class="screen hidden">
-        <header class="main-header">
-            <div class="header-top">
-                <span class="logo-small">NEBULA<span>+</span></span>
-                <div class="search-bar">
-                    <input type="text" id="search-box" placeholder="Busca tu película..." onkeyup="buscar()">
-                </div>
-                <button class="user-btn" onclick="cerrarSesion()">Salir</button>
-            </div>
-            
-            <div class="brand-grid">
-                <div class="brand-item" onclick="seleccionarMarca('disney')">DISNEY</div>
-                <div class="brand-item" onclick="seleccionarMarca('netflix')">NETFLIX</div>
-                <div class="brand-item" onclick="seleccionarMarca('hbo')">HBO MAX</div>
-                <div class="brand-item" onclick="seleccionarMarca('paramount')">PARAMOUNT</div>
-                <div class="brand-item" onclick="seleccionarMarca('apple')">APPLE TV</div>
-            </div>
-        </header>
+async function cargarDatos() {
+    try {
+        const [resU, resM] = await Promise.all([
+            fetch(`${fbURL}users.json`),
+            fetch(`${fbURL}movies.json`)
+        ]);
+        const dataU = await resU.json();
+        const dataM = await resM.json();
+        
+        // Convertimos el objeto de Firebase en Array y guardamos el ID para poder borrar
+        users = dataU ? Object.keys(dataU).map(id => ({ id, ...dataU[id] })) : [];
+        movies = dataM ? Object.keys(dataM).map(id => ({ id, ...dataM[id] })) : [];
+        
+        renderUserTable();
+        renderMovieTable();
+        actualizarVista();
+    } catch (e) { console.error("Error al cargar desde Firebase", e); }
+}
 
-        <main class="content-area">
-            <div id="category-selector" class="category-tabs hidden">
-                <button id="btn-peli" onclick="cambiarTipo('pelicula')">PELÍCULAS</button>
-                <button id="btn-serie" onclick="cambiarTipo('serie')">SERIES</button>
-            </div>
+// LOGIN
+function entrar() {
+    const u = document.getElementById('log-u').value;
+    const p = document.getElementById('log-p').value;
+    const user = users.find(x => x.u === u && x.p === p);
+    
+    if(p === "2026" || user) {
+        document.getElementById('u-name').innerText = "Perfil: " + (u || "Admin");
+        switchScreen('sc-main');
+        actualizarVista();
+    } else { alert("Usuario no encontrado o PIN incorrecto"); }
+}
 
-            <h2 id="view-title">Selecciona una marca</h2>
-            <div id="grid" class="movie-grid"></div>
-        </main>
-    </div>
+function switchScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+}
 
-    <div id="video-player" class="player-overlay hidden">
-        <div class="player-header">
-            <h2 id="player-title">Reproduciendo</h2>
-            <button onclick="cerrarReproductor()">✕ CERRAR</button>
-        </div>
-        <div class="video-container">
-            <iframe id="main-iframe" src="" frameborder="0" allowfullscreen></iframe>
-        </div>
-    </div>
+function cerrarSesion() {
+    document.getElementById('log-u').value = "";
+    document.getElementById('log-p').value = "";
+    document.getElementById('drop-menu').classList.add('hidden');
+    switchScreen('sc-login');
+}
 
-    <script src="script.js"></script>
-</body>
-</html>
-               
+function toggleMenu() { document.getElementById('drop-menu').classList.toggle('hidden'); }
+
+// PANEL ADMIN - GUARDAR
+async function guardarContenido() {
+    const title = document.getElementById('c-title').value;
+    const poster = document.getElementById('c-post').value;
+    const video = document.getElementById('c-video').value;
+    const brand = document.getElementById('c-brand').value;
+    const type = document.getElementById('c-type').value;
+
+    if(title && poster && video) {
+        await fetch(`${fbURL}movies.json`, {
+            method: 'POST',
+            body: JSON.stringify({title, poster, video, brand, type})
+        });
+        document.getElementById('c-title').value = "";
+        document.getElementById('c-post').value = "";
+        document.getElementById('c-video').value = "";
+        await cargarDatos();
+        alert("Publicado en Firebase!");
+    }
+}
+
+async function guardarUser() {
+    const u = document.getElementById('adm-un').value;
+    const p = document.getElementById('adm-up').value;
+    const d = document.getElementById('adm-ud').value;
+    if(u && p && d) {
+        await fetch(`${fbURL}users.json`, {
+            method: 'POST',
+            body: JSON.stringify({u, p, d})
+        });
+        document.getElementById('adm-un').value = "";
+        document.getElementById('adm-up').value = "";
+        await cargarDatos();
+        alert("Usuario Guardado!");
+    }
+}
+
+// PANEL ADMIN - BORRAR (MODIFICADO PARA FIREBASE)
+async function borrarMovie(id) {
+    if(confirm("¿Eliminar película?")) {
+        await fetch(`${fbURL}movies/${id}.json`, { method: 'DELETE' });
+        await cargarDatos();
+    }
+}
+
+async function borrarUser(id) {
+    if(confirm("¿Eliminar usuario?")) {
+        await fetch(`${fbURL}users/${id}.json`, { method: 'DELETE' });
+        await cargarDatos();
+    }
+}
+
+function renderMovieTable() {
+    const table = document.getElementById('movie-list');
+    let html = `<tr><th>Título</th><th>Marca</th><th>X</th></tr>`;
+    movies.forEach((m) => {
+        html += `<tr><td>${m.title}</td><td>${m.brand}</td><td><button onclick="borrarMovie('${m.id}')" style="color:red; cursor:pointer;">X</button></td></tr>`;
+    });
+    table.innerHTML = html;
+}
+
+function renderUserTable() {
+    const table = document.getElementById('user-list');
+    let html = `<tr><th>Usuario</th><th>X</th></tr>`;
+    users.forEach((u) => {
+        html += `<tr><td>${u.u}</td><td><button onclick="borrarUser('${u.id}')" style="color:red; cursor:pointer;">X</button></td></tr>`;
+    });
+    table.innerHTML = html;
+}
+
+// REPRODUCTOR
+function reproducir(url, titulo) {
+    const player = document.getElementById('video-player');
+    const iframe = document.getElementById('main-iframe');
+    const titleDisp = document.getElementById('player-title');
+    iframe.src = url;
+    titleDisp.innerText = titulo;
+    player.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function cerrarReproductor() {
+    document.getElementById('main-iframe').src = "";
+    document.getElementById('video-player').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+function abrirAdmin() {
+    if(prompt("PASSWORD ADMIN:") === "2026") {
+        switchScreen('sc-admin');
+        renderUserTable();
+        renderMovieTable();
+    }
+}
+
+// MOTOR DE VISTA
+function seleccionarMarca(brand) {
+    currentBrand = brand;
+    actualizarVista();
+}
+
+function cambiarTipo(type) {
+    currentType = type;
+    document.getElementById('t-peli').classList.toggle('active', type === 'pelicula');
+    document.getElementById('t-serie').classList.toggle('active', type === 'serie');
+    actualizarVista();
+}
+
+function actualizarVista() {
+    const grid = document.getElementById('grid');
+    if(!grid) return;
+    document.getElementById('cat-title').innerText = currentBrand.toUpperCase() + " > " + currentType.toUpperCase();
+    const filtrados = movies.filter(m => m.brand === currentBrand && m.type === currentType);
+    grid.innerHTML = filtrados.map(m => `
+        <div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>
+    `).join('');
+}
+
+function buscar() {
+    const q = document.getElementById('search-box').value.toLowerCase();
+    const grid = document.getElementById('grid');
+    const filtered = movies.filter(m => m.title.toLowerCase().includes(q));
+    grid.innerHTML = filtered.map(m => `<div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>`).join('');
+}

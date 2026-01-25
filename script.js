@@ -24,15 +24,14 @@ onValue(ref(db, 'movies'), (s) => {
     renderMovieTable();
 });
 
-// --- GESTIÓN DE USUARIOS (VINCULACIÓN REFORZADA) ---
+// --- GESTIÓN DE USUARIOS ---
 window.guardarUser = function() {
     const u = document.getElementById('adm-un').value;
     const p = document.getElementById('adm-up').value;
     const d = document.getElementById('adm-ud').value;
 
     if(u && p && d) {
-        const userRef = ref(db, 'users');
-        push(userRef, { u, p, d })
+        push(ref(db, 'users'), { u, p, d })
         .then(() => {
             alert("Usuario guardado correctamente");
             document.getElementById('adm-un').value = "";
@@ -129,30 +128,49 @@ function actualizarVista() {
     grid.innerHTML = fil.map(m => `<div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>`).join('');
 }
 
-// --- REPRODUCTOR ---
+// --- REPRODUCTOR CON TEMPORADAS ---
 window.reproducir = function(url, titulo) {
     const frame = document.getElementById('main-iframe');
     const playerTitle = document.getElementById('player-title');
     const status = document.getElementById('player-status');
     
-    if (url.includes(',')) {
-        const caps = url.split(',');
-        status.innerText = "Selecciona un episodio:";
-        playerTitle.innerHTML = `${titulo} <div class="lista-episodios">` + 
-            caps.map((l, i) => `<button class="btn-ep" onclick="cargarVideo('${l.trim()}', ${i+1})">▶ EP. ${i+1}</button>`).join('') + `</div>`;
-        frame.src = "";
+    // Si contiene comas o barras verticales, es contenido con múltiples partes (Serie)
+    if (url.includes(',') || url.includes('|')) {
+        const temporadas = url.split('|');
+        status.innerText = "Selecciona Temporada y Episodio";
+        
+        let htmlSeries = `${titulo} <div style="max-height: 250px; overflow-y: auto; margin-top: 15px;">`;
+        
+        temporadas.forEach((temp, tIndex) => {
+            const capitulos = temp.split(',');
+            htmlSeries += `<h4 style="color:var(--blue); margin: 15px 0 10px 0; text-align:left;">Temporada ${tIndex + 1}</h4>`;
+            htmlSeries += `<div class="lista-episodios">`;
+            
+            capitulos.forEach((link, eIndex) => {
+                htmlSeries += `
+                    <button class="btn-ep" onclick="cargarVideo('${link.trim()}', 'T${tIndex + 1} - E${eIndex + 1}')">
+                        ▶ EP. ${eIndex + 1}
+                    </button>`;
+            });
+            htmlSeries += `</div>`;
+        });
+        
+        htmlSeries += `</div>`;
+        playerTitle.innerHTML = htmlSeries;
+        frame.src = ""; 
     } else {
         frame.src = url;
         playerTitle.innerText = titulo;
         status.innerText = "Reproduciendo ahora...";
     }
+
     document.getElementById('video-player').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 };
 
-window.cargarVideo = function(l, n) {
-    document.getElementById('main-iframe').src = l;
-    document.getElementById('player-status').innerText = "Viendo Episodio " + n;
+window.cargarVideo = function(link, info) {
+    document.getElementById('main-iframe').src = link;
+    document.getElementById('player-status').innerText = "Viendo: " + info;
 };
 
 window.cerrarReproductor = function() {

@@ -1,41 +1,62 @@
-:root { --bg: #040714; --blue: #0063e5; --glass: rgba(255, 255, 255, 0.08); }
-body, html { margin: 0; padding: 0; background: var(--bg); color: white; font-family: sans-serif; height: 100%; overflow: hidden; }
+:root { --bg: #040714; --card: #1a1d29; --blue: #0063e5; --input: #31343e; }
 
-/* EL BOTÓN SECRETO */
-.admin-trigger {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 60px;
-    height: 60px;
-    z-index: 9999; /* Por encima de todo */
-    background: transparent; /* Invisible */
-}
-
-.screen { position: fixed; inset: 0; background: var(--bg); z-index: 10; overflow-y: auto; display: flex; flex-direction: column; }
+body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
 .hidden { display: none !important; }
 
-/* MEJORA DEL LOGIN */
-.glass-card { 
-    background: var(--glass); 
-    padding: 30px; 
-    border-radius: 15px; 
-    width: 90%; 
-    max-width: 350px; 
-    margin: auto; 
-    text-align: center;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.1);
+/* BOTÓN ADMIN INVISIBLE */
+.admin-trigger { position: fixed; top: 0; left: 0; width: 60px; height: 60px; z-index: 999999; }
+
+/* PANTALLAS */
+.screen { min-height: 100vh; width: 100%; background: var(--bg); }
+
+/* REPRODUCTOR SUPER TV */
+.player-overlay { position: fixed; inset: 0; background: #000; z-index: 100000; display: flex; flex-direction: column; }
+.player-header-st { 
+    position: absolute; top: 0; width: 100%; padding: 20px; 
+    display: flex; justify-content: space-between; align-items: center; 
+    background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); 
+    z-index: 10; 
 }
-.login-form input { display: block; width: 100%; margin: 10px 0; padding: 12px; border-radius: 5px; border: none; background: #1a1d29; color: white; box-sizing: border-box; }
+.video-frame-st { width: 100%; height: 100vh; background: #000; }
+.video-frame-st iframe { width: 100%; height: 100%; border: none; }
+.close-player-st { 
+    background: rgba(255,255,255,0.2); color: white; border: 1px solid white; 
+    padding: 10px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; 
+}
 
-/* MARCAS Y GRID */
-.brand-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
-.brand-item { height: 70px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold; border: 1px solid rgba(255,255,255,0.1); }
-.b-disney { background: #0063e5; } .b-netflix { background: #e50914; }
+/* NAVBAR Y BUSCADOR */
+.navbar { padding: 15px 20px; background: var(--bg); border-bottom: 1px solid #1a1d29; }
+.nav-top { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
+#search-box { 
+    background: var(--input); border: 1px solid #444; color: white; 
+    padding: 10px 15px; border-radius: 20px; flex-grow: 1; max-width: 400px;
+}
+.logo-s { font-weight: bold; font-size: 1.2rem; letter-spacing: 2px; }
+.logo-s span { color: var(--blue); }
 
-/* TABLAS PANEL ADMIN */
-.admin-container { padding: 20px; }
-.admin-section { background: #1a1d29; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-.table-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #333; font-size: 14px; }
-.btn-del { background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 3px; }
+/* DROPDOWN USUARIO */
+.user-zone { position: relative; }
+.avatar { background: var(--card); border: none; font-size: 1.5rem; cursor: pointer; border-radius: 50%; width: 40px; height: 40px; }
+.dropdown { 
+    position: absolute; right: 0; top: 50px; background: var(--card); 
+    padding: 15px; border-radius: 10px; border: 1px solid #444; width: 150px; z-index: 100;
+}
+.btn-logout-card { background: #e50914; color: white; border: none; width: 100%; padding: 8px; border-radius: 5px; cursor: pointer; }
+
+/* DISEÑO GENERAL */
+.login-container { width: 320px; margin: 20vh auto; text-align: center; }
+input, select { width: 100%; padding: 12px; margin: 8px 0; background: var(--input); border: none; color: white; border-radius: 5px; box-sizing: border-box; }
+.btn-blue { background: var(--blue); color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold; }
+.brand-bar { display: flex; gap: 8px; overflow-x: auto; padding: 15px 0; scrollbar-width: none; }
+.brand-bar button { background: var(--card); color: white; border: 1px solid #333; padding: 8px 15px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+
+.movie-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; }
+.poster { width: 100%; aspect-ratio: 2/3; background-size: cover; background-position: center; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+.poster:hover { border-color: white; transform: scale(1.02); transition: 0.3s; }
+
+.admin-grid { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 15px; }
+@media (min-width: 768px) { .admin-grid { grid-template-columns: 1fr 1fr; } }
+.admin-card { background: var(--card); padding: 20px; border-radius: 15px; }
+.table-scroll { max-height: 200px; overflow-y: auto; margin-top: 10px; background: #000; border-radius: 5px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+td, th { padding: 8px; text-align: left; border-bottom: 1px solid #222; }

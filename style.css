@@ -1,35 +1,41 @@
-:root { --bg: #040714; --blue: #0063e5; --glass: rgba(255,255,255,0.05); }
-body, html { margin: 0; padding: 0; background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; height: 100%; }
+:root { --bg: #040714; --blue: #0063e5; --glass: rgba(255, 255, 255, 0.08); }
+body, html { margin: 0; padding: 0; background: var(--bg); color: white; font-family: sans-serif; height: 100%; overflow: hidden; }
 
-.screen, .full-screen { position: fixed; inset: 0; width: 100%; height: 100%; background: var(--bg); z-index: 10; overflow-y: auto; display: flex; flex-direction: column; }
+/* EL BOTÓN SECRETO */
+.admin-trigger {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 60px;
+    height: 60px;
+    z-index: 9999; /* Por encima de todo */
+    background: transparent; /* Invisible */
+}
+
+.screen { position: fixed; inset: 0; background: var(--bg); z-index: 10; overflow-y: auto; display: flex; flex-direction: column; }
 .hidden { display: none !important; }
 
-/* INTRO */
-#intro-screen { z-index: 1000; justify-content: center; align-items: center; }
-.logo-intro { font-size: 3.5rem; letter-spacing: 5px; }
-.logo-intro span { color: var(--blue); }
+/* MEJORA DEL LOGIN */
+.glass-card { 
+    background: var(--glass); 
+    padding: 30px; 
+    border-radius: 15px; 
+    width: 90%; 
+    max-width: 350px; 
+    margin: auto; 
+    text-align: center;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.login-form input { display: block; width: 100%; margin: 10px 0; padding: 12px; border-radius: 5px; border: none; background: #1a1d29; color: white; box-sizing: border-box; }
 
-/* LOGIN */
-#sc-login { justify-content: center; align-items: center; }
-.glass-card { background: var(--glass); padding: 40px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); width: 85%; max-width: 400px; text-align: center; }
+/* MARCAS Y GRID */
+.brand-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
+.brand-item { height: 70px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold; border: 1px solid rgba(255,255,255,0.1); }
+.b-disney { background: #0063e5; } .b-netflix { background: #e50914; }
 
-/* MARCAS */
-.brand-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
-.brand-item { height: 80px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
-.b-disney { background: linear-gradient(45deg, #001a4d, #0063e5); }
-.b-netflix { background: linear-gradient(45deg, #4d0000, #e50914); }
-.b-hbo { background: linear-gradient(45deg, #3c004d, #9900ff); }
-.b-paramount { background: #0064ff; }
-.b-espn { background: #ff0000; }
-.b-natgeo { background: #ffcc00; color: black; }
-
-/* GRID Y PLAYER */
-.movie-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; }
-.movie-card img { width: 100%; border-radius: 6px; aspect-ratio: 2/3; object-fit: cover; }
-
-.player-screen { position: fixed; inset: 0; background: black; z-index: 5000; }
-#main-iframe { width: 100%; height: 100%; }
-.player-header { position: absolute; top: 0; width: 100%; padding: 20px; display: flex; justify-content: space-between; background: linear-gradient(rgba(0,0,0,0.8), transparent); z-index: 5001; }
-
-input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; background: #2a2e3d; color: white; }
-.btn-primary { background: var(--blue); color: white; border: none; padding: 15px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; }
+/* TABLAS PANEL ADMIN */
+.admin-container { padding: 20px; }
+.admin-section { background: #1a1d29; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+.table-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #333; font-size: 14px; }
+.btn-del { background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 3px; }

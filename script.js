@@ -1,26 +1,35 @@
-const firebaseURL = "https://nebula-plus-app-default-rtdb.firebaseio.com/";
-let movies = [], users = [], marcaActual = "";
+const fbURL = "https://nebula-plus-app-default-rtdb.firebaseio.com/";
+let users = [], movies = [], currentBrand = 'disney', currentType = 'pelicula';
 
-window.onload = async () => {
-    await cargarDesdeFirebase();
-    setTimeout(() => {
-        document.getElementById('intro-screen').classList.add('hidden');
-        switchScreen('sc-login');
-    }, 3000);
-};
+// CARGA INICIAL
+window.onload = () => { cargarDatos(); };
 
-async function cargarDesdeFirebase() {
+async function cargarDatos() {
     try {
         const [resU, resM] = await Promise.all([
-            fetch(`${firebaseURL}users.json`),
-            fetch(`${firebaseURL}movies.json`)
+            fetch(`${fbURL}users.json`),
+            fetch(`${fbURL}movies.json`)
         ]);
         const dataU = await resU.json();
         const dataM = await resM.json();
         users = dataU ? Object.keys(dataU).map(id => ({ id, ...dataU[id] })) : [];
         movies = dataM ? Object.keys(dataM).map(id => ({ id, ...dataM[id] })) : [];
-        renderTablas();
-    } catch (e) { console.error("Error cargando datos"); }
+        renderUserTable();
+        renderMovieTable();
+        actualizarVista();
+    } catch (e) { console.error("Error Firebase"); }
+}
+
+// LOGIN
+function entrar() {
+    const u = document.getElementById('log-u').value;
+    const p = document.getElementById('log-p').value;
+    const user = users.find(x => x.u === u && x.p === p);
+    
+    if(p === "2026" || user) {
+        document.getElementById('u-name-display').innerText = u || "Admin";
+        switchScreen('sc-main');
+    } else { alert("Credenciales incorrectas"); }
 }
 
 function switchScreen(id) {
@@ -28,86 +37,100 @@ function switchScreen(id) {
     document.getElementById(id).classList.remove('hidden');
 }
 
-function abrirAdmin() {
-    let pin = prompt("PIN ADMINISTRADOR:");
-    if(pin === "2026") switchScreen('sc-admin');
+function cerrarSesion() {
+    document.getElementById('drop-menu').classList.add('hidden');
+    switchScreen('sc-login');
 }
 
-function entrar() {
-    const u = document.getElementById('log-u').value;
-    const p = document.getElementById('log-p').value;
-    // Buscamos si el PIN ingresado coincide con algún usuario o el maestro
-    if(p === "2026" || users.find(x => x.u === u && x.p === p)) {
-        switchScreen('sc-main');
+function toggleMenu() { document.getElementById('drop-menu').classList.toggle('hidden'); }
+
+// BUSCADOR ACTIVO
+function buscar() {
+    const q = document.getElementById('search-box').value.toLowerCase();
+    const grid = document.getElementById('grid');
+    if(q.length > 0) {
+        const filtered = movies.filter(m => m.title.toLowerCase().includes(q));
+        grid.innerHTML = filtered.map(m => `
+            <div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>
+        `).join('');
     } else {
-        alert("Credenciales incorrectas");
+        actualizarVista();
     }
 }
 
-// LÓGICA DE CATÁLOGO
-function seleccionarMarca(marca) {
-    marcaActual = marca;
-    document.getElementById('brand-menu').classList.add('hidden');
-    document.getElementById('type-selector').classList.remove('hidden');
+// REPRODUCTOR SUPER TV
+function reproducir(url, titulo) {
+    const player = document.getElementById('video-player');
+    const iframe = document.getElementById('main-iframe');
+    document.getElementById('player-title').innerText = titulo;
+    iframe.src = url;
+    player.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
 }
 
-function filtrarTipo(tipo) {
-    const filtrados = movies.filter(m => m.brand === marcaActual && m.type === tipo);
+function cerrarReproductor() {
+    document.getElementById('main-iframe').src = "";
+    document.getElementById('video-player').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// CATÁLOGO
+function seleccionarMarca(brand) { currentBrand = brand; actualizarVista(); }
+function cambiarTipo(type) {
+    currentType = type;
+    document.getElementById('t-peli').classList.toggle('active', type === 'pelicula');
+    document.getElementById('t-serie').classList.toggle('active', type === 'serie');
+    actualizarVista();
+}
+
+function actualizarVista() {
     const grid = document.getElementById('grid');
+    if(!grid) return;
+    document.getElementById('cat-title').innerText = `${currentBrand.toUpperCase()} > ${currentType.toUpperCase()}`;
+    const filtrados = movies.filter(m => m.brand === currentBrand && m.type === currentType);
     grid.innerHTML = filtrados.map(m => `
-        <div class="movie-card" onclick="verVideo('${m.video}','${m.title}')">
-            <img src="${m.poster}">
-        </div>
+        <div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>
     `).join('');
 }
 
-function volverAMarcas() {
-    document.getElementById('brand-menu').classList.remove('hidden');
-    document.getElementById('type-selector').classList.add('hidden');
-    document.getElementById('grid').innerHTML = "";
-}
+// ADMIN LOGIC
+function abrirAdmin() { if(prompt("PASSWORD ADMIN:") === "2026") switchScreen('sc-admin'); }
 
-// REPRODUCTOR
-function verVideo(url, titulo) {
-    document.getElementById('main-iframe').src = url;
-    document.getElementById('now-playing').innerText = titulo;
-    document.getElementById('video-player').classList.remove('hidden');
-}
-
-function cerrarPlayer() {
-    document.getElementById('main-iframe').src = "";
-    document.getElementById('video-player').classList.add('hidden');
-}
-
-// GESTIÓN ADMIN
 async function guardarContenido() {
     const data = {
         title: document.getElementById('c-title').value,
         poster: document.getElementById('c-post').value,
         video: document.getElementById('c-video').value,
-        brand: document.getElementById('c-brand-sel').value,
-        type: document.getElementById('c-type-sel').value
+        brand: document.getElementById('c-brand').value,
+        type: document.getElementById('c-type').value
     };
-    await fetch(`${firebaseURL}movies.json`, { method: 'POST', body: JSON.stringify(data) });
-    alert("¡Publicado!");
-    cargarDesdeFirebase();
+    await fetch(`${fbURL}movies.json`, { method: 'POST', body: JSON.stringify(data) });
+    cargarDatos();
 }
 
-function renderTablas() {
-    const table = document.getElementById('movie-table');
-    table.innerHTML = movies.map(m => `
-        <div class="table-item">
-            <span>${m.title} (${m.brand})</span>
-            <button class="btn-del" onclick="borrarContenido('${m.id}')">Eliminar</button>
-        </div>
-    `).join('');
+async function guardarUser() {
+    const u = document.getElementById('adm-un').value;
+    const p = document.getElementById('adm-up').value;
+    const d = document.getElementById('adm-ud').value;
+    await fetch(`${fbURL}users.json`, { method: 'POST', body: JSON.stringify({u, p, d}) });
+    cargarDatos();
 }
 
-async function borrarContenido(id) {
-    if(confirm("¿Seguro que quieres eliminar este contenido?")) {
-        await fetch(`${firebaseURL}movies/${id}.json`, { method: 'DELETE' });
-        cargarDesdeFirebase();
+function renderMovieTable() {
+    const table = document.getElementById('movie-list');
+    table.innerHTML = `<tr><th>Título</th><th>Marca</th><th>X</th></tr>` + 
+    movies.map(m => `<tr><td>${m.title}</td><td>${m.brand}</td><td><button onclick="borrar('movies','${m.id}')">X</button></td></tr>`).join('');
+}
+
+function renderUserTable() {
+    const table = document.getElementById('user-list');
+    table.innerHTML = `<tr><th>Usuario</th><th>X</th></tr>` + 
+    users.map(u => `<tr><td>${u.u}</td><td><button onclick="borrar('users','${u.id}')">X</button></td></tr>`).join('');
+}
+
+async function borrar(path, id) {
+    if(confirm("¿Eliminar?")) {
+        await fetch(`${fbURL}${path}/${id}.json`, { method: 'DELETE' });
+        cargarDatos();
     }
 }
-
-function cerrarSesion() { location.reload(); }

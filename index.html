@@ -14,7 +14,7 @@
         <div class="login-container">
             <h1 class="logo-title">NEBULA<span>+</span></h1>
             <input type="text" id="log-u" placeholder="Usuario">
-            <input type="password" id="log-p" placeholder="Contraseña">
+            <input type="password" id="log-p" placeholder="PIN de Acceso">
             <button class="btn-blue" onclick="entrar()">ENTRAR</button>
         </div>
     </div>
@@ -30,7 +30,7 @@
                 <input type="text" id="adm-un" placeholder="Nombre">
                 <input type="text" id="adm-up" placeholder="PIN">
                 <input type="date" id="adm-ud">
-                <button class="btn-blue" onclick="guardarUser()">Guardar</button>
+                <button class="btn-blue" onclick="guardarUser()">Guardar Usuario</button>
                 <div class="table-scroll"><table id="user-list"></table></div>
             </div>
             <div class="admin-card">
@@ -102,6 +102,6 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>

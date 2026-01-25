@@ -10,18 +10,19 @@ let movies = [];
 let currentBrand = 'disney';
 let currentType = 'pelicula';
 
-// --- SYNC FIREBASE ---
+// --- SYNC FIREBASE (CORRECCIÓN: Actualización en tiempo real) ---
 onValue(ref(db, 'users'), (s) => {
     const d = s.val();
     users = d ? Object.keys(d).map(k => ({...d[k], id: k})) : [];
-    renderUserTable();
+    if(document.getElementById('user-list')) renderUserTable();
 });
 
 onValue(ref(db, 'movies'), (s) => {
     const d = s.val();
     movies = d ? Object.keys(d).map(k => ({...d[k], id: k})) : [];
-    actualizarVista();
-    renderMovieTable();
+    // Esta llamada garantiza que cuando subas algo, aparezca en todos los dispositivos
+    actualizarVista(); 
+    if(document.getElementById('movie-list')) renderMovieTable();
 });
 
 // --- SISTEMA DE ACCESO ---
@@ -82,7 +83,7 @@ window.guardarUser = function() {
 
 window.borrarUser = function(id) { remove(ref(db, `users/${id}`)); };
 
-// --- MOTOR DE VISTA ---
+// --- MOTOR DE VISTA (DISEÑO ORIGINAL) ---
 window.seleccionarMarca = function(b) { currentBrand = b; actualizarVista(); };
 window.cambiarTipo = function(t) {
     currentType = t;
@@ -96,13 +97,19 @@ function actualizarVista() {
     if(!grid) return;
     document.getElementById('cat-title').innerText = `${currentBrand.toUpperCase()} > ${currentType.toUpperCase()}`;
     const fil = movies.filter(m => m.brand === currentBrand && m.type === currentType);
-    grid.innerHTML = fil.map(m => `<div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>`).join('');
+    
+    // Volvemos a tu diseño original de posters
+    grid.innerHTML = fil.map(m => `
+        <div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>
+    `).join('');
 }
 
 window.buscar = function() {
     const q = document.getElementById('search-box').value.toLowerCase();
     const fil = movies.filter(m => m.title.toLowerCase().includes(q));
-    document.getElementById('grid').innerHTML = fil.map(m => `<div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>`).join('');
+    document.getElementById('grid').innerHTML = fil.map(m => `
+        <div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>
+    `).join('');
 };
 
 // --- REPRODUCTOR PRO ---
@@ -124,11 +131,11 @@ window.cerrarReproductor = function() {
 function renderMovieTable() {
     let h = `<tr><th>Título</th><th>X</th></tr>`;
     movies.forEach(m => h += `<tr><td>${m.title}</td><td><button onclick="borrarMovie('${m.id}')">✖</button></td></tr>`);
-    document.getElementById('movie-list').innerHTML = h;
+    if(document.getElementById('movie-list')) document.getElementById('movie-list').innerHTML = h;
 }
 function renderUserTable() {
     let h = `<tr><th>Usuario</th><th>Vence</th><th>X</th></tr>`;
     users.forEach(u => h += `<tr><td>${u.u}</td><td>${u.d}</td><td><button onclick="borrarUser('${u.id}')">✖</button></td></tr>`);
-    document.getElementById('user-list').innerHTML = h;
+    if(document.getElementById('user-list')) document.getElementById('user-list').innerHTML = h;
 }
 window.toggleMenu = function() { document.getElementById('drop-menu').classList.toggle('hidden'); };

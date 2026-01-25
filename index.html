@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+
+    <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -94,14 +95,18 @@
 
     <div id="video-player" class="player-overlay hidden">
         <div class="player-container">
-            <button class="close-player" onclick="cerrarReproductor()">✕ CERRAR</button>
-            <div class="video-frame">
-                <iframe id="main-iframe" src="" frameborder="0" allowfullscreen></iframe>
+            <div class="player-header">
+                <h2 id="player-status">Reproduciendo ahora...</h2>
+                <button class="close-player" onclick="cerrarReproductor()">✕ CERRAR</button>
             </div>
-            <h2 id="player-title">Título</h2>
+            <div class="video-frame">
+                <iframe id="main-iframe" src="" frameborder="0" allowfullscreen allow="autoplay"></iframe>
+            </div>
+            <h1 id="player-title">Título</h1>
         </div>
     </div>
 
     <script type="module" src="script.js"></script>
 </body>
 </html>
+                

@@ -10,63 +10,40 @@ let movies = [];
 let currentBrand = 'disney';
 let currentType = 'pelicula';
 
-// --- SYNC FIREBASE (TIEMPO REAL) ---
+// --- SINCRONIZACIÓN EN TIEMPO REAL ---
 onValue(ref(db, 'users'), (s) => {
     const d = s.val();
     users = d ? Object.keys(d).map(k => ({...d[k], id: k})) : [];
-    renderUserTable(); // Restaurado: Ahora sí se verán los usuarios en el panel
+    renderUserTable();
 });
 
 onValue(ref(db, 'movies'), (s) => {
     const d = s.val();
     movies = d ? Object.keys(d).map(k => ({...d[k], id: k})) : [];
-    actualizarVista(); 
+    actualizarVista();
     renderMovieTable();
 });
 
-// --- SISTEMA DE ACCESO ---
-window.entrar = function() {
-    const u = document.getElementById('log-u').value;
-    const p = document.getElementById('log-p').value;
-    
-    if(u === "admin" && p === "2026") {
-        document.getElementById('u-name').innerText = "Admin Nebula+";
-        switchScreen('sc-main');
-        return;
-    }
-
-    const user = users.find(x => x.u === u && x.p === p);
-    if(user) {
-        const hoy = new Date().toISOString().split('T')[0];
-        if(hoy > user.d) return alert("Cuenta expirada. Contacte soporte.");
-        document.getElementById('u-name').innerText = "Hola, " + u;
-        switchScreen('sc-main');
-    } else { alert("Usuario o PIN incorrectos"); }
-};
-
-window.abrirAdmin = function() {
-    if(prompt("CLAVE MAESTRA:") === "2026") switchScreen('sc-admin');
-};
-
-function switchScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-}
-
-window.cerrarSesion = function() { location.reload(); };
-
-// --- GESTIÓN DE USUARIOS (RESTAURADO) ---
+// --- GESTIÓN DE USUARIOS (CORREGIDO Y EXPUESTO AL WINDOW) ---
 window.guardarUser = function() {
+    console.log("Intentando guardar usuario..."); // Esto aparecerá en la consola para saber si funciona
     const u = document.getElementById('adm-un').value;
     const p = document.getElementById('adm-up').value;
     const d = document.getElementById('adm-ud').value;
+
     if(u && p && d) {
-        push(ref(db, 'users'), {u, p, d});
-        document.getElementById('adm-un').value = "";
-        document.getElementById('adm-up').value = "";
-        document.getElementById('adm-ud').value = "";
+        push(ref(db, 'users'), { u, p, d })
+        .then(() => {
+            alert("Usuario guardado correctamente");
+            document.getElementById('adm-un').value = "";
+            document.getElementById('adm-up').value = "";
+            document.getElementById('adm-ud').value = "";
+        })
+        .catch((error) => {
+            alert("Error de Firebase: " + error.message);
+        });
     } else {
-        alert("Rellena todos los campos del usuario");
+        alert("Por favor, completa todos los campos del usuario (Nombre, PIN y Fecha)");
     }
 };
 
@@ -76,9 +53,32 @@ window.borrarUser = function(id) {
 
 function renderUserTable() {
     let h = `<tr><th>Usuario</th><th>Vence</th><th>X</th></tr>`;
-    users.forEach(u => h += `<tr><td>${u.u}</td><td>${u.d}</td><td><button onclick="borrarUser('${u.id}')">✖</button></td></tr>`);
+    users.forEach(u => {
+        h += `<tr><td>${u.u}</td><td>${u.d}</td><td><button onclick="borrarUser('${u.id}')">✖</button></td></tr>`;
+    });
     const table = document.getElementById('user-list');
     if(table) table.innerHTML = h;
+}
+
+// --- SISTEMA DE ACCESO ---
+window.entrar = function() {
+    const u = document.getElementById('log-u').value;
+    const p = document.getElementById('log-p').value;
+    if(u === "admin" && p === "2026") { switchScreen('sc-main'); return; }
+    const user = users.find(x => x.u === u && x.p === p);
+    if(user) {
+        if(new Date().toISOString().split('T')[0] > user.d) return alert("Cuenta expirada");
+        switchScreen('sc-main');
+    } else { alert("Acceso denegado"); }
+};
+
+window.abrirAdmin = function() {
+    if(prompt("CLAVE MAESTRA:") === "2026") switchScreen('sc-admin');
+};
+
+function switchScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
 }
 
 // --- GESTIÓN CONTENIDO ---
@@ -97,9 +97,7 @@ window.guardarContenido = function() {
     }
 };
 
-window.borrarMovie = function(id) { 
-    if(confirm("¿Eliminar contenido?")) remove(ref(db, `movies/${id}`)); 
-};
+window.borrarMovie = function(id) { if(confirm("¿Eliminar?")) remove(ref(db, `movies/${id}`)); };
 
 function renderMovieTable() {
     let h = `<tr><th>Título</th><th>X</th></tr>`;
@@ -125,35 +123,26 @@ function actualizarVista() {
     grid.innerHTML = fil.map(m => `<div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>`).join('');
 }
 
-// --- REPRODUCTOR CON CAPÍTULOS ---
+// --- REPRODUCTOR ---
 window.reproducir = function(url, titulo) {
     const frame = document.getElementById('main-iframe');
     const playerTitle = document.getElementById('player-title');
-    const status = document.getElementById('player-status');
-    
     if (url.includes(',')) {
-        const capitulos = url.split(',');
-        status.innerText = "Selecciona un episodio";
+        const caps = url.split(',');
         playerTitle.innerHTML = `${titulo} <div class="lista-episodios">` + 
-            capitulos.map((link, i) => `
-                <button class="btn-ep" onclick="cargarVideo('${link.trim()}', ${i+1})">
-                    ▶ EP. ${i+1}
-                </button>
-            `).join('') + `</div>`;
-        frame.src = ""; 
+            caps.map((l, i) => `<button class="btn-ep" onclick="cargarVideo('${l.trim()}', ${i+1})">▶ EP. ${i+1}</button>`).join('') + `</div>`;
+        frame.src = "";
     } else {
         frame.src = url;
         playerTitle.innerText = titulo;
-        status.innerText = "Reproduciendo Película";
     }
-
     document.getElementById('video-player').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 };
 
-window.cargarVideo = function(link, num) {
-    document.getElementById('main-iframe').src = link;
-    document.getElementById('player-status').innerText = "Viendo Episodio " + num;
+window.cargarVideo = function(l, n) {
+    document.getElementById('main-iframe').src = l;
+    document.getElementById('player-status').innerText = "Episodio " + n;
 };
 
 window.cerrarReproductor = function() {
@@ -162,4 +151,5 @@ window.cerrarReproductor = function() {
     document.body.style.overflow = 'auto';
 };
 
+window.cerrarSesion = function() { location.reload(); };
 window.toggleMenu = function() { document.getElementById('drop-menu').classList.toggle('hidden'); };

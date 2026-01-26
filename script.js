@@ -10,7 +10,7 @@ let movies = [];
 let currentBrand = 'disney';
 let currentType = 'pelicula';
 
-// --- SINCRONIZACIÓN EN TIEMPO REAL ---
+// --- TIEMPO REAL ---
 onValue(ref(db, 'users'), (s) => {
     const d = s.val();
     users = d ? Object.keys(d).map(k => ({...d[k], id: k})) : [];
@@ -24,41 +24,33 @@ onValue(ref(db, 'movies'), (s) => {
     renderMovieTable();
 });
 
-// --- GESTIÓN DE USUARIOS ---
+// --- USUARIOS ---
 window.guardarUser = function() {
     const u = document.getElementById('adm-un').value;
     const p = document.getElementById('adm-up').value;
     const d = document.getElementById('adm-ud').value;
-
     if(u && p && d) {
-        push(ref(db, 'users'), { u, p, d })
-        .then(() => {
-            alert("Usuario guardado correctamente");
+        push(ref(db, 'users'), { u, p, d }).then(() => {
+            alert("Usuario Guardado");
             document.getElementById('adm-un').value = "";
             document.getElementById('adm-up').value = "";
-            document.getElementById('adm-ud').value = "";
-        })
-        .catch((e) => alert("Error: " + e.message));
-    } else {
-        alert("Completa todos los campos del usuario");
+        });
     }
 };
 
-window.borrarUser = function(id) { 
-    if(confirm("¿Eliminar usuario?")) remove(ref(db, `users/${id}`)); 
-};
+window.borrarUser = function(id) { if(confirm("¿Eliminar?")) remove(ref(db, `users/${id}`)); };
 
 function renderUserTable() {
     const table = document.getElementById('user-list');
     if(!table) return;
     let h = `<tr><th>Usuario</th><th>Vence</th><th>X</th></tr>`;
     users.forEach(u => {
-        h += `<tr><td>${u.u}</td><td>${u.d}</td><td><button onclick="borrarUser('${u.id}')" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">✖</button></td></tr>`;
+        h += `<tr><td>${u.u}</td><td>${u.d}</td><td><button onclick="borrarUser('${u.id}')">✖</button></td></tr>`;
     });
     table.innerHTML = h;
 }
 
-// --- SISTEMA DE ACCESO ---
+// --- ACCESO ---
 window.entrar = function() {
     const u = document.getElementById('log-u').value;
     const p = document.getElementById('log-p').value;
@@ -68,12 +60,11 @@ window.entrar = function() {
         if(new Date().toISOString().split('T')[0] > user.d) return alert("Cuenta expirada");
         document.getElementById('u-name').innerText = "Hola, " + u;
         switchScreen('sc-main');
-    } else { alert("Acceso denegado"); }
+    } else { alert("Denegado"); }
 };
 
 window.abrirAdmin = function() {
-    const pass = prompt("CLAVE MAESTRA:");
-    if(pass === "2026") switchScreen('sc-admin');
+    if(prompt("CLAVE:") === "2026") switchScreen('sc-admin');
 };
 
 function switchScreen(id) {
@@ -81,7 +72,7 @@ function switchScreen(id) {
     document.getElementById(id).classList.remove('hidden');
 }
 
-// --- GESTIÓN CONTENIDO ---
+// --- CONTENIDO (CON CUADROS IDENTIFICADORES) ---
 window.guardarContenido = function() {
     const title = document.getElementById('c-title').value;
     const poster = document.getElementById('c-post').value;
@@ -92,6 +83,7 @@ window.guardarContenido = function() {
     if(title && poster && video) {
         push(ref(db, 'movies'), {title, poster, video, brand, type})
         .then(() => {
+            alert("Publicado como: " + type.toUpperCase());
             document.getElementById('c-title').value = "";
             document.getElementById('c-post').value = "";
             document.getElementById('c-video').value = "";
@@ -104,14 +96,15 @@ window.borrarMovie = function(id) { if(confirm("¿Eliminar?")) remove(ref(db, `m
 function renderMovieTable() {
     const table = document.getElementById('movie-list');
     if(!table) return;
-    let h = `<tr><th>Título</th><th>X</th></tr>`;
+    let h = `<tr><th>Título</th><th>Identificador</th><th>X</th></tr>`;
     movies.forEach(m => {
-        h += `<tr><td>${m.title}</td><td><button onclick="borrarMovie('${m.id}')" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">✖</button></td></tr>`;
+        const badge = m.type === 'pelicula' ? '<span class="badge-peli">PELÍCULA</span>' : '<span class="badge-serie">SERIE</span>';
+        h += `<tr><td>${m.title}</td><td>${badge}</td><td><button onclick="borrarMovie('${m.id}')">✖</button></td></tr>`;
     });
     table.innerHTML = h;
 }
 
-// --- MOTOR DE VISTA ---
+// --- VISTA Y FILTROS ---
 window.seleccionarMarca = function(b) { currentBrand = b; actualizarVista(); };
 window.cambiarTipo = function(t) {
     currentType = t;
@@ -128,49 +121,34 @@ function actualizarVista() {
     grid.innerHTML = fil.map(m => `<div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>`).join('');
 }
 
-// --- REPRODUCTOR INTELIGENTE (PELI VS SERIE) ---
+// --- REPRODUCTOR (EL CEREBRO QUE SEPARA) ---
 window.reproducir = function(url, titulo) {
     const frame = document.getElementById('main-iframe');
     const playerTitle = document.getElementById('player-title');
     const status = document.getElementById('player-status');
     
-    // Resetear siempre el reproductor al abrir cualquier cosa
     frame.src = ""; 
-    playerTitle.innerHTML = titulo; // Limpia botones anteriores
+    playerTitle.innerHTML = titulo; 
 
-    // Si tiene comas o barras verticales, el sistema lo procesa como SERIE
-    const esSerie = url.includes(',') || url.includes('|');
-
-    if (esSerie) {
+    // Si tiene comas o barras, genera episodios. Si no, carga directo.
+    if (url.includes(',') || url.includes('|')) {
         const temporadas = url.split('|');
-        status.innerText = "Selecciona Temporada y Episodio";
-        
+        status.innerText = "Selecciona Episodio";
         let htmlSeries = `<div style="max-height: 250px; overflow-y: auto; margin-top: 15px;">`;
-        
         temporadas.forEach((temp, tIndex) => {
             const capitulos = temp.split(',');
-            htmlSeries += `<h4 style="color:var(--blue); margin: 15px 0 10px 0; text-align:left;">Temporada ${tIndex + 1}</h4>`;
-            htmlSeries += `<div class="lista-episodios">`;
-            
+            htmlSeries += `<h4 style="color:var(--blue); margin: 15px 0 5px 0;">Temporada ${tIndex + 1}</h4><div class="lista-episodios">`;
             capitulos.forEach((link, eIndex) => {
-                htmlSeries += `
-                    <button class="btn-ep" onclick="cargarVideo('${link.trim()}', 'T${tIndex + 1} - E${eIndex + 1}')">
-                        ▶ EP. ${eIndex + 1}
-                    </button>`;
+                htmlSeries += `<button class="btn-ep" onclick="cargarVideo('${link.trim()}', 'T${tIndex + 1}-E${eIndex + 1}')">▶ EP. ${eIndex + 1}</button>`;
             });
             htmlSeries += `</div>`;
         });
-        
-        htmlSeries += `</div>`;
-        playerTitle.innerHTML = titulo + htmlSeries; 
+        playerTitle.innerHTML = titulo + htmlSeries + `</div>`;
     } else {
-        // MODO PELÍCULA: Carga el video inmediatamente y no muestra botones
         frame.src = url;
-        status.innerText = "Reproduciendo ahora...";
+        status.innerText = "Reproduciendo Película";
     }
-
     document.getElementById('video-player').classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
 };
 
 window.cargarVideo = function(link, info) {

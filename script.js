@@ -128,18 +128,24 @@ function actualizarVista() {
     grid.innerHTML = fil.map(m => `<div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>`).join('');
 }
 
-// --- REPRODUCTOR CON TEMPORADAS ---
+// --- REPRODUCTOR INTELIGENTE (PELI VS SERIE) ---
 window.reproducir = function(url, titulo) {
     const frame = document.getElementById('main-iframe');
     const playerTitle = document.getElementById('player-title');
     const status = document.getElementById('player-status');
     
-    // Si contiene comas o barras verticales, es contenido con múltiples partes (Serie)
-    if (url.includes(',') || url.includes('|')) {
+    // Resetear siempre el reproductor al abrir cualquier cosa
+    frame.src = ""; 
+    playerTitle.innerHTML = titulo; // Limpia botones anteriores
+
+    // Si tiene comas o barras verticales, el sistema lo procesa como SERIE
+    const esSerie = url.includes(',') || url.includes('|');
+
+    if (esSerie) {
         const temporadas = url.split('|');
         status.innerText = "Selecciona Temporada y Episodio";
         
-        let htmlSeries = `${titulo} <div style="max-height: 250px; overflow-y: auto; margin-top: 15px;">`;
+        let htmlSeries = `<div style="max-height: 250px; overflow-y: auto; margin-top: 15px;">`;
         
         temporadas.forEach((temp, tIndex) => {
             const capitulos = temp.split(',');
@@ -156,11 +162,10 @@ window.reproducir = function(url, titulo) {
         });
         
         htmlSeries += `</div>`;
-        playerTitle.innerHTML = htmlSeries;
-        frame.src = ""; 
+        playerTitle.innerHTML = titulo + htmlSeries; 
     } else {
+        // MODO PELÍCULA: Carga el video inmediatamente y no muestra botones
         frame.src = url;
-        playerTitle.innerText = titulo;
         status.innerText = "Reproduciendo ahora...";
     }
 

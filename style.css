@@ -99,3 +99,12 @@ td, th { padding: 12px; border-bottom: 1px solid #222; text-align: left; }
     background: var(--blue);
     border-color: #fff;
 }
+/* Cuadros identificadores en el panel admin */
+.badge-peli { 
+    background: #28a745; color: white; padding: 4px 10px; 
+    border-radius: 6px; font-size: 0.75rem; font-weight: bold; 
+}
+.badge-serie { 
+    background: #e50914; color: white; padding: 4px 10px; 
+    border-radius: 6px; font-size: 0.75rem; font-weight: bold; 
+}

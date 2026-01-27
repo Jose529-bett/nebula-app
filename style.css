@@ -41,3 +41,30 @@ input, select, textarea { width: 100%; padding: 12px; margin-bottom: 10px; backg
 .btn-green-pub { background: var(--green); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
 .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; padding: 15px; }
 .poster { width: 100%; aspect-ratio: 2/3; background-size: cover; border-radius: 8px; cursor: pointer; }
+/* Ajuste para que el Login sea pequeño y centrado */
+#sc-login .login-container {
+    max-width: 320px !important; /* Forzamos el tamaño pequeño */
+    margin: auto;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Permitir scroll en el reproductor para ver todos los capítulos */
+#video-player {
+    overflow-y: auto !important;
+    padding-bottom: 50px;
+}
+
+/* Estilo del botón de cierre (ajustado a tu estética) */
+.btn-cerrar-flotante {
+    background: #ff4444;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    margin: 10px;
+    float: right; /* Lo pone arriba a la derecha */
+}

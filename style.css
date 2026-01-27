@@ -4,67 +4,65 @@ body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif;
 
 .admin-trigger { position: fixed; top: 0; left: 0; width: 60px; height: 60px; z-index: 999999; }
 
+/* NAVBAR RESPONSIVA */
+.navbar { padding: 15px 20px; background: var(--bg); border-bottom: 1px solid #1a1d29; }
+.nav-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.nav-right { display: flex; align-items: center; gap: 10px; flex-grow: 1; justify-content: flex-end; }
+
+#search-box { 
+    background: var(--input); border: none; color: white; padding: 10px; 
+    border-radius: 5px; width: 100%; max-width: 200px;
+}
+
+/* MARCAS DESLIZABLES (Para que no se amontonen en móvil) */
+.brand-bar { 
+    display: flex; gap: 10px; overflow-x: auto; margin-top: 15px; padding-bottom: 5px;
+    scrollbar-width: none; -ms-overflow-style: none;
+}
+.brand-bar::-webkit-scrollbar { display: none; }
+.brand-bar button { 
+    background: var(--card); color: white; border: 1px solid #333; 
+    padding: 8px 18px; border-radius: 6px; white-space: nowrap; cursor: pointer;
+}
+
+/* CATÁLOGO */
+#cat-title { 
+    margin: 20px 0; font-size: 1.1rem; border-left: 4px solid var(--blue); padding-left: 10px; 
+    text-transform: uppercase; letter-spacing: 1px;
+}
+.tabs { display: flex; gap: 15px; margin-bottom: 20px; }
+.tabs button { background: none; border: none; color: #777; font-weight: bold; cursor: pointer; }
+.tabs button.active { color: white; border-bottom: 2px solid white; }
+
+.movie-grid { 
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
+    gap: 15px; padding: 0 5px; 
+}
+.poster { width: 100%; aspect-ratio: 2/3; background-size: cover; border-radius: 8px; border: 2px solid transparent; }
+
 /* REPRODUCTOR */
 .player-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.98); z-index: 10000;
-    display: flex; align-items: center; justify-content: center;
-    backdrop-filter: blur(15px); animation: fadeIn 0.3s ease;
+    display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);
 }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.player-container { width: 95%; max-width: 1000px; }
+.player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.close-player { background: var(--red); color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; }
 
-.player-container { width: 95%; max-width: 1100px; }
-.player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-#player-status { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 2px; }
-
-.close-player { 
-    background: rgba(255,255,255,0.1); color: white; border: 1px solid #444; 
-    padding: 10px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; transition: 0.3s;
-}
-.close-player:hover { background: var(--red); border-color: var(--red); }
-
-.video-frame { 
-    width: 100%; aspect-ratio: 16/9; background: #000; 
-    border-radius: 12px; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,1);
-    border: 1px solid #333;
-}
+.video-frame { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 10px; overflow: hidden; }
 .video-frame iframe { width: 100%; height: 100%; }
 
-#info-repro { padding: 20px 0; }
-#player-title { margin: 0 0 15px 0; font-size: 2rem; }
+.episodes-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-ep { background: var(--input); color: white; border: 1px solid #444; padding: 10px; border-radius: 5px; flex: 1 1 100px; }
 
-/* EPISODIOS */
-.episodes-grid { display: flex; gap: 10px; flex-wrap: wrap; }
-.btn-ep { 
-    background: #31343e; color: white; border: 1px solid #444; 
-    padding: 10px 20px; border-radius: 6px; cursor: pointer; transition: 0.2s;
-}
-.btn-ep:hover { background: var(--blue); border-color: white; }
-
-/* LOGIN & UI */
-.login-container { width: 320px; margin: 20vh auto; text-align: center; }
-.logo-title { font-size: 3rem; letter-spacing: 5px; }
+/* LOGIN & ADMIN */
+.login-container { width: 280px; margin: 15vh auto; text-align: center; }
+.logo-title { font-size: 2.5rem; letter-spacing: 3px; }
 .logo-title span { color: var(--blue); }
-input, select { width: 100%; padding: 14px; margin: 8px 0; background: var(--input); border: none; color: white; border-radius: 8px; box-sizing: border-box; }
-.btn-blue { background: var(--blue); color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; }
-
-.navbar { padding: 20px 40px; background: var(--bg); border-bottom: 1px solid #1a1d29; }
-.nav-top { display: flex; justify-content: space-between; align-items: center; }
-.logo-s { font-weight: bold; font-size: 1.8rem; }
-#search-box { width: 350px; margin: 0; }
-
-.brand-bar { display: flex; gap: 12px; justify-content: center; margin-top: 25px; }
-.brand-bar button { background: var(--card); color: white; border: 1px solid #333; padding: 12px 22px; border-radius: 8px; cursor: pointer; }
-
-.movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 25px; padding: 40px; }
-.poster { width: 100%; aspect-ratio: 2/3; background-size: cover; border-radius: 12px; cursor: pointer; transition: 0.4s; border: 3px solid transparent; }
-.poster:hover { transform: scale(1.08); border-color: white; }
-
-.admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; }
-.admin-card { background: var(--card); padding: 25px; border-radius: 15px; }
-.table-scroll { max-height: 250px; overflow-y: auto; background: #000; border-radius: 8px; margin-top: 15px; }
-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-td, th { padding: 12px; border-bottom: 1px solid #222; text-align: left; }
-
-.dropdown { position: absolute; right: 50px; top: 80px; background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #444; width: 180px; text-align: center; }
-.avatar { background: var(--input); border: none; color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; }
+.admin-grid { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 15px; }
+@media(min-width: 768px) { .admin-grid { grid-template-columns: 1fr 1fr; } }
+.admin-card { background: var(--card); padding: 20px; border-radius: 12px; }
+.table-scroll { max-height: 200px; overflow-y: auto; background: #000; margin-top: 10px; border-radius: 5px; }
+table { width: 100%; color: #ccc; font-size: 0.8rem; }
+td, th { padding: 10px; border-bottom: 1px solid #222; }

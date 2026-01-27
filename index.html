@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nebula+ | Premium Experience</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -63,12 +63,14 @@
         <nav class="navbar">
             <div class="nav-top">
                 <span class="logo-s">NEBULA+</span>
-                <input type="text" id="search-box" placeholder="Buscar..." onkeyup="buscar()">
-                <div class="user-zone">
-                    <button class="avatar" onclick="toggleMenu()">👤</button>
-                    <div id="drop-menu" class="dropdown hidden">
-                        <p id="u-name"></p>
-                        <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
+                <div class="nav-right">
+                    <input type="text" id="search-box" placeholder="Buscar..." onkeyup="buscar()">
+                    <div class="user-zone">
+                        <button class="avatar" onclick="toggleMenu()">👤</button>
+                        <div id="drop-menu" class="dropdown hidden">
+                            <p id="u-name"></p>
+                            <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -98,20 +100,18 @@
                 <h2 id="player-status">MODO REPRODUCCIÓN</h2>
                 <button class="close-player" onclick="cerrarReproductor()">✕ CERRAR</button>
             </div>
-            
             <div class="video-frame">
                 <iframe id="main-iframe" src="" frameborder="0" allowfullscreen allow="autoplay"></iframe>
             </div>
-
             <div id="info-repro">
                 <h1 id="player-title">Título del Contenido</h1>
                 <div id="serie-controls" class="hidden">
-                    <h3 style="color: #0063e5; margin-bottom: 10px;">SELECCIONA EPISODIO</h3>
+                    <h3 style="color: #0063e5; margin: 15px 0 10px 0;">SELECCIONA EPISODIO</h3>
                     <div class="episodes-grid">
-                        <button class="btn-ep" onclick="cambiarEp(1)">EP. 1</button>
-                        <button class="btn-ep" onclick="cambiarEp(2)">EP. 2</button>
-                        <button class="btn-ep" onclick="cambiarEp(3)">EP. 3</button>
-                        <button class="btn-ep" onclick="cambiarEp(4)">EP. 4</button>
+                        <button class="btn-ep" onclick="cambiarEp(1)">▶ EP. 1</button>
+                        <button class="btn-ep" onclick="cambiarEp(2)">▶ EP. 2</button>
+                        <button class="btn-ep" onclick="cambiarEp(3)">▶ EP. 3</button>
+                        <button class="btn-ep" onclick="cambiarEp(4)">▶ EP. 4</button>
                     </div>
                 </div>
             </div>
@@ -121,5 +121,3 @@
     <script type="module" src="script.js"></script>
 </body>
 </html>
-
-                

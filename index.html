@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nebula+ | Premium Experience</title>
+    <title>Nebula+</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -21,7 +21,7 @@
 
     <div id="sc-admin" class="screen hidden">
         <div class="admin-nav">
-            <h2>Panel Admin</h2>
+            <button class="btn-back" onclick="switchScreen('sc-main')">← Volver</button>
             <button class="btn-red" onclick="cerrarSesion()">CERRAR SESIÓN</button>
         </div>
         <div class="admin-grid">
@@ -31,13 +31,15 @@
                 <input type="text" id="adm-up" placeholder="PIN">
                 <input type="date" id="adm-ud">
                 <button class="btn-blue" onclick="guardarUser()">Guardar Usuario</button>
-                <div class="table-scroll"><table id="user-list"></table></div>
+                <div class="table-container">
+                    <table id="user-list"></table>
+                </div>
             </div>
             <div class="admin-card">
                 <h3>Contenido</h3>
                 <input type="text" id="c-title" placeholder="Título">
                 <input type="text" id="c-post" placeholder="URL Poster">
-                <input type="text" id="c-video" placeholder="URL Video/Embed">
+                <textarea id="c-video" placeholder="Link video | T1: link1, link2 | T2: link3"></textarea>
                 <div class="row">
                     <select id="c-brand">
                         <option value="disney">Disney</option>
@@ -53,8 +55,10 @@
                         <option value="serie">Serie</option>
                     </select>
                 </div>
-                <button class="btn-blue" style="background:#28a745" onclick="guardarContenido()">PUBLICAR</button>
-                <div class="table-scroll"><table id="movie-list"></table></div>
+                <button class="btn-green-pub" onclick="guardarContenido()">PUBLICAR</button>
+                <div class="table-container">
+                    <table id="movie-list"></table>
+                </div>
             </div>
         </div>
     </div>
@@ -65,12 +69,10 @@
                 <span class="logo-s">NEBULA+</span>
                 <div class="nav-right">
                     <input type="text" id="search-box" placeholder="Buscar..." onkeyup="buscar()">
-                    <div class="user-zone">
-                        <button class="avatar" onclick="toggleMenu()">👤</button>
-                        <div id="drop-menu" class="dropdown hidden">
-                            <p id="u-name"></p>
-                            <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
-                        </div>
+                    <button class="avatar" onclick="toggleMenu()">👤</button>
+                    <div id="drop-menu" class="dropdown hidden">
+                        <p id="u-name"></p>
+                        <button onclick="cerrarSesion()">Salir</button>
                     </div>
                 </div>
             </div>
@@ -97,22 +99,18 @@
     <div id="video-player" class="player-overlay hidden">
         <div class="player-container">
             <div class="player-header">
-                <h2 id="player-status">MODO REPRODUCCIÓN</h2>
+                <h2 id="player-status">REPRODUCIENDO</h2>
                 <button class="close-player" onclick="cerrarReproductor()">✕ CERRAR</button>
             </div>
             <div class="video-frame">
                 <iframe id="main-iframe" src="" frameborder="0" allowfullscreen allow="autoplay"></iframe>
             </div>
             <div id="info-repro">
-                <h1 id="player-title">Título del Contenido</h1>
+                <h1 id="player-title">Título</h1>
                 <div id="serie-controls" class="hidden">
-                    <h3 style="color: #0063e5; margin: 15px 0 10px 0;">SELECCIONA EPISODIO</h3>
-                    <div class="episodes-grid">
-                        <button class="btn-ep" onclick="cambiarEp(1)">▶ EP. 1</button>
-                        <button class="btn-ep" onclick="cambiarEp(2)">▶ EP. 2</button>
-                        <button class="btn-ep" onclick="cambiarEp(3)">▶ EP. 3</button>
-                        <button class="btn-ep" onclick="cambiarEp(4)">▶ EP. 4</button>
-                    </div>
+                    <h3 style="color:#0063e5; margin:10px 0;">Temporada</h3>
+                    <select id="season-selector" onchange="cargarTemporada(this.value)"></select>
+                    <div id="episodes-grid" class="episodes-grid"></div>
                 </div>
             </div>
         </div>

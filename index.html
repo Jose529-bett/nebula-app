@@ -1,5 +1,4 @@
-
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -96,17 +95,31 @@
     <div id="video-player" class="player-overlay hidden">
         <div class="player-container">
             <div class="player-header">
-                <h2 id="player-status">Reproduciendo ahora...</h2>
+                <h2 id="player-status">MODO REPRODUCCIÓN</h2>
                 <button class="close-player" onclick="cerrarReproductor()">✕ CERRAR</button>
             </div>
+            
             <div class="video-frame">
                 <iframe id="main-iframe" src="" frameborder="0" allowfullscreen allow="autoplay"></iframe>
             </div>
-            <h1 id="player-title">Título</h1>
+
+            <div id="info-repro">
+                <h1 id="player-title">Título del Contenido</h1>
+                <div id="serie-controls" class="hidden">
+                    <h3 style="color: #0063e5; margin-bottom: 10px;">SELECCIONA EPISODIO</h3>
+                    <div class="episodes-grid">
+                        <button class="btn-ep" onclick="cambiarEp(1)">EP. 1</button>
+                        <button class="btn-ep" onclick="cambiarEp(2)">EP. 2</button>
+                        <button class="btn-ep" onclick="cambiarEp(3)">EP. 3</button>
+                        <button class="btn-ep" onclick="cambiarEp(4)">EP. 4</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script type="module" src="script.js"></script>
 </body>
 </html>
+
                 

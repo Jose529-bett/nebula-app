@@ -1,70 +1,39 @@
-:root { --bg: #0b0e19; --card: #1a1d29; --blue: #0063e5; --input: #252833; --red: #ff4444; --green: #24ba45; }
-body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; overflow-x: hidden; }
+:root { --bg: #0b0e19; --card: #1a1d29; --blue: #0063e5; --input: #252833; }
+body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; }
 .hidden { display: none !important; }
 
-/* TABLAS ESTILO IMAGEN 1 */
-.table-container { background: #000; border-radius: 12px; margin-top: 15px; overflow: hidden; padding: 5px; }
-table { width: 100%; border-collapse: collapse; }
-th { padding: 12px; border-bottom: 1px solid #222; text-align: left; font-size: 0.9rem; }
-td { padding: 12px; border-bottom: 1px solid #111; font-size: 0.85rem; }
-.badge-peli { background: var(--green); color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; text-transform: uppercase; }
-
-/* LOGIN CENTRADO Y PEQUEÑO */
+/* LOGIN AJUSTADO */
 #sc-login { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
 .login-container { 
-    width: 90%; max-width: 320px; background: var(--card); 
-    padding: 30px; border-radius: 15px; text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    width: 85%; max-width: 320px; background: var(--card); 
+    padding: 30px; border-radius: 12px; text-align: center;
 }
-.logo-title { font-size: 2rem; margin-bottom: 20px; color: #fff; }
-.logo-title span { color: var(--blue); }
+.btn-blue-login { background: var(--blue); width: 100%; padding: 12px; border: none; color: white; font-weight: bold; border-radius: 5px; margin-top: 10px; }
 
 /* REPRODUCTOR CON SCROLL */
 .player-overlay { 
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-    background: #000; z-index: 10000; overflow-y: auto; /* Permite bajar en series */
+    background: #000; z-index: 10000; overflow-y: auto; /* Permite bajar */
 }
 .player-header { 
-    position: sticky; top: 0; background: #000; padding: 15px; 
     display: flex; justify-content: space-between; align-items: center; 
-    border-bottom: 1px solid #222; z-index: 10001;
+    padding: 15px; background: #000; position: sticky; top: 0; z-index: 10;
 }
-.btn-cerrar-repro { background: var(--red); color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+.btn-cerrar-repro { background: #333; color: white; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; }
 .video-frame { width: 100%; aspect-ratio: 16/9; background: #000; }
-.episodes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 10px; padding: 10px 0; }
-#season-selector { width: 100%; padding: 10px; background: var(--input); color: white; border-radius: 8px; border: 1px solid #333; }
+.episodes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; padding: 15px; }
+.btn-ep { background: #252833; color: white; border: 1px solid #444; padding: 10px; border-radius: 6px; }
 
-/* OTROS ESTILOS */
-.admin-card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; }
-input, select, textarea { width: 100%; padding: 12px; margin-bottom: 10px; background: var(--input); border: none; color: white; border-radius: 8px; box-sizing: border-box; }
-.btn-blue { background: var(--blue); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
-.btn-green-pub { background: var(--green); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
+/* ADMIN Y TABLAS */
+.admin-trigger { position: fixed; top: 0; right: 0; width: 50px; height: 50px; z-index: 9999; }
+.table-container { background: #000; border-radius: 10px; padding: 10px; margin-top: 10px; }
+table { width: 100%; border-collapse: collapse; }
+td { padding: 10px; border-bottom: 1px solid #111; font-size: 0.9rem; }
+.badge { background: #24ba45; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; }
+
+/* NAVBAR Y GRILLA */
+.navbar { background: var(--card); padding-bottom: 10px; }
+.brand-bar { display: flex; overflow-x: auto; gap: 10px; padding: 10px; }
+.brand-bar button { background: #eee; color: #000; border: none; padding: 5px 12px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
 .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; padding: 15px; }
-.poster { width: 100%; aspect-ratio: 2/3; background-size: cover; border-radius: 8px; cursor: pointer; }
-/* Ajuste para que el Login sea pequeño y centrado */
-#sc-login .login-container {
-    max-width: 320px !important; /* Forzamos el tamaño pequeño */
-    margin: auto;
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-/* Permitir scroll en el reproductor para ver todos los capítulos */
-#video-player {
-    overflow-y: auto !important;
-    padding-bottom: 50px;
-}
-
-/* Estilo del botón de cierre (ajustado a tu estética) */
-.btn-cerrar-flotante {
-    background: #ff4444;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    font-weight: bold;
-    cursor: pointer;
-    margin: 10px;
-    float: right; /* Lo pone arriba a la derecha */
-}
+.poster { width: 100%; aspect-ratio: 2/3; background-size: cover; border-radius: 10px; }

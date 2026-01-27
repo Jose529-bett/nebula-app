@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nebula+</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEBULA+</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,51 +15,7 @@
             <h1 class="logo-title">NEBULA<span>+</span></h1>
             <input type="text" id="log-u" placeholder="Usuario">
             <input type="password" id="log-p" placeholder="PIN de Acceso">
-            <button class="btn-blue" onclick="entrar()">ENTRAR</button>
-        </div>
-    </div>
-
-    <div id="sc-admin" class="screen hidden">
-        <div class="admin-nav">
-            <button class="btn-back" onclick="switchScreen('sc-main')">← Volver</button>
-            <button class="btn-red" onclick="cerrarSesion()">CERRAR SESIÓN</button>
-        </div>
-        <div class="admin-grid">
-            <div class="admin-card">
-                <h3>Usuarios</h3>
-                <input type="text" id="adm-un" placeholder="Nombre">
-                <input type="text" id="adm-up" placeholder="PIN">
-                <input type="date" id="adm-ud">
-                <button class="btn-blue" onclick="guardarUser()">Guardar Usuario</button>
-                <div class="table-container">
-                    <table id="user-list"></table>
-                </div>
-            </div>
-            <div class="admin-card">
-                <h3>Contenido</h3>
-                <input type="text" id="c-title" placeholder="Título">
-                <input type="text" id="c-post" placeholder="URL Poster">
-                <textarea id="c-video" placeholder="Link video | T1: link1, link2 | T2: link3"></textarea>
-                <div class="row">
-                    <select id="c-brand">
-                        <option value="disney">Disney</option>
-                        <option value="netflix">Netflix</option>
-                        <option value="hbo">HBO Max</option>
-                        <option value="paramount">Paramount</option>
-                        <option value="apple">Apple TV</option>
-                        <option value="espn">ESPN</option>
-                        <option value="natgeo">NAT GEO</option>
-                    </select>
-                    <select id="c-type">
-                        <option value="pelicula">Película</option>
-                        <option value="serie">Serie</option>
-                    </select>
-                </div>
-                <button class="btn-green-pub" onclick="guardarContenido()">PUBLICAR</button>
-                <div class="table-container">
-                    <table id="movie-list"></table>
-                </div>
-            </div>
+            <button class="btn-blue-login" onclick="entrar()">ENTRAR</button>
         </div>
     </div>
 
@@ -67,14 +23,7 @@
         <nav class="navbar">
             <div class="nav-top">
                 <span class="logo-s">NEBULA+</span>
-                <div class="nav-right">
-                    <input type="text" id="search-box" placeholder="Buscar..." onkeyup="buscar()">
-                    <button class="avatar" onclick="toggleMenu()">👤</button>
-                    <div id="drop-menu" class="dropdown hidden">
-                        <p id="u-name"></p>
-                        <button onclick="cerrarSesion()">Salir</button>
-                    </div>
-                </div>
+                <input type="text" id="search-box" placeholder="Buscar..." onkeyup="buscar()">
             </div>
             <div class="brand-bar">
                 <button onclick="seleccionarMarca('disney')">DISNEY</button>
@@ -85,12 +34,12 @@
                 <button onclick="seleccionarMarca('espn')">ESPN</button>
                 <button onclick="seleccionarMarca('natgeo')">NAT GEO</button>
             </div>
-        </nav>
-        <div class="main-content">
             <div class="tabs">
                 <button id="t-peli" class="active" onclick="cambiarTipo('pelicula')">PELÍCULAS</button>
                 <button id="t-serie" onclick="cambiarTipo('serie')">SERIES</button>
             </div>
+        </nav>
+        <div class="main-content">
             <h2 id="cat-title">CATÁLOGO</h2>
             <div id="grid" class="movie-grid"></div>
         </div>
@@ -99,16 +48,44 @@
     <div id="video-player" class="player-overlay hidden">
         <div class="player-header">
             <h2 id="player-title">REPRODUCIENDO</h2>
-            <button class="btn-cerrar-repro" onclick="cerrarReproductor()">✕ CERRAR</button>
+            <button class="btn-cerrar-repro" onclick="cerrarReproductor()">CERRAR ✕</button>
         </div>
         <div class="video-frame">
-            <iframe id="main-iframe" src="" frameborder="0" allowfullscreen allow="autoplay"></iframe>
+            <iframe id="main-iframe" src="" frameborder="0" allowfullscreen></iframe>
         </div>
-        <div id="info-repro" style="padding: 15px;">
+        <div class="player-details">
             <div id="serie-controls" class="hidden">
-                <h3 style="color:#0063e5; margin-bottom:10px;">Temporadas</h3>
+                <h3 class="label-temporada">Temporada</h3>
                 <select id="season-selector" onchange="cargarTemporada(this.value)"></select>
                 <div id="episodes-grid" class="episodes-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="sc-admin" class="screen hidden">
+        <div class="admin-header">
+            <button class="btn-back" onclick="switchScreen('sc-main')">← Volver</button>
+            <button class="btn-logout" onclick="cerrarSesion()">CERRAR SESIÓN</button>
+        </div>
+        <div class="admin-content">
+            <div class="admin-card">
+                <h3>Usuarios</h3>
+                <input type="text" id="adm-un" placeholder="Nombre">
+                <input type="text" id="adm-up" placeholder="PIN">
+                <button class="btn-blue" onclick="guardarUser()">Guardar Usuario</button>
+                <div class="table-container">
+                    <table id="user-list"></table>
+                </div>
+            </div>
+            <div class="admin-card">
+                <h3>Contenido</h3>
+                <input type="text" id="c-title" placeholder="Título">
+                <input type="text" id="c-post" placeholder="URL Poster">
+                <textarea id="c-video" placeholder="Link video | T1: l1, l2 | T2: l3"></textarea>
+                <button class="btn-green" onclick="guardarContenido()">PUBLICAR</button>
+                <div class="table-container">
+                    <table id="movie-list"></table>
+                </div>
             </div>
         </div>
     </div>

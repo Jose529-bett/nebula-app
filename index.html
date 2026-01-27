@@ -97,21 +97,18 @@
     </div>
 
     <div id="video-player" class="player-overlay hidden">
-        <div class="player-container">
-            <div class="player-header">
-                <h2 id="player-status">REPRODUCIENDO</h2>
-                <button class="close-player" onclick="cerrarReproductor()">✕ CERRAR</button>
-            </div>
-            <div class="video-frame">
-                <iframe id="main-iframe" src="" frameborder="0" allowfullscreen allow="autoplay"></iframe>
-            </div>
-            <div id="info-repro">
-                <h1 id="player-title">Título</h1>
-                <div id="serie-controls" class="hidden">
-                    <h3 style="color:#0063e5; margin:10px 0;">Temporada</h3>
-                    <select id="season-selector" onchange="cargarTemporada(this.value)"></select>
-                    <div id="episodes-grid" class="episodes-grid"></div>
-                </div>
+        <div class="player-header">
+            <h2 id="player-title">REPRODUCIENDO</h2>
+            <button class="btn-cerrar-repro" onclick="cerrarReproductor()">✕ CERRAR</button>
+        </div>
+        <div class="video-frame">
+            <iframe id="main-iframe" src="" frameborder="0" allowfullscreen allow="autoplay"></iframe>
+        </div>
+        <div id="info-repro" style="padding: 15px;">
+            <div id="serie-controls" class="hidden">
+                <h3 style="color:#0063e5; margin-bottom:10px;">Temporadas</h3>
+                <select id="season-selector" onchange="cargarTemporada(this.value)"></select>
+                <div id="episodes-grid" class="episodes-grid"></div>
             </div>
         </div>
     </div>

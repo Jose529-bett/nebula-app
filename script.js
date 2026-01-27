@@ -27,10 +27,9 @@ function cerrarSesion() {
 
 function toggleMenu() { document.getElementById('drop-menu').classList.toggle('hidden'); }
 
-// REPRODUCTOR ACTUALIZADO
+// --- REPRODUCTOR HÍBRIDO ACTUALIZADO ---
 function reproducir(cadenaVideo, titulo) {
     const player = document.getElementById('video-player');
-    const iframe = document.getElementById('main-iframe');
     const titleDisp = document.getElementById('player-title');
     const serieControls = document.getElementById('serie-controls');
     
@@ -43,17 +42,41 @@ function reproducir(cadenaVideo, titulo) {
 
     if(item && item.type === 'serie') {
         serieControls.classList.remove('hidden');
-        // Separar temporadas por | y capítulos por ,
         const temporadas = item.video.split('|');
         datosSerieActual = temporadas.map(t => t.split(','));
-        
         const selector = document.getElementById('season-selector');
         selector.innerHTML = datosSerieActual.map((_, i) => `<option value="${i}">Temporada ${i+1}</option>`).join('');
-        
         cargarTemporada(0);
     } else {
         serieControls.classList.add('hidden');
-        iframe.src = cadenaVideo;
+        gestionarFuenteVideo(cadenaVideo);
+    }
+}
+
+// Nueva función para decidir si usar VIDEO o IFRAME
+function gestionarFuenteVideo(url) {
+    const videoFrame = document.querySelector('.video-frame');
+    videoFrame.innerHTML = ''; // Limpiar contenedor
+    
+    const urlLimpia = url.trim();
+    const esVideoDirecto = urlLimpia.toLowerCase().includes('.m3u8') || urlLimpia.toLowerCase().includes('.mp4');
+
+    if (esVideoDirecto) {
+        videoFrame.innerHTML = `
+            <video id="main-v" controls autoplay style="width:100%; height:100%; background:#000;">
+                <source src="${urlLimpia}" type="application/x-mpegURL">
+                Tu dispositivo no soporta este formato de video.
+            </video>`;
+        
+        // Soporte HLS para Android si hls.js está presente
+        if (urlLimpia.includes('.m3u8') && Hls.isSupported()) {
+            var video = document.getElementById('main-v');
+            var hls = new Hls();
+            hls.loadSource(urlLimpia);
+            hls.attachMedia(video);
+        }
+    } else {
+        videoFrame.innerHTML = `<iframe id="main-iframe" src="${urlLimpia}" frameborder="0" allowfullscreen style="width:100%; height:100%;"></iframe>`;
     }
 }
 
@@ -69,18 +92,18 @@ function cargarTemporada(idx) {
 }
 
 function cambiarEpisodio(url) {
-    document.getElementById('main-iframe').src = url;
+    gestionarFuenteVideo(url);
 }
 
 function cerrarReproductor() {
     const player = document.getElementById('video-player');
-    const iframe = document.getElementById('main-iframe');
-    iframe.src = "";
+    const videoFrame = document.querySelector('.video-frame');
+    videoFrame.innerHTML = ''; // Detiene cualquier video/audio
     player.classList.add('hidden');
     document.body.style.overflow = 'auto';
 }
 
-// PANEL ADMIN
+// --- RESTO DEL CÓDIGO (ADMIN Y MOTOR) ---
 function abrirAdmin() {
     if(prompt("PASSWORD ADMIN:") === "2026") {
         switchScreen('sc-admin');
@@ -150,7 +173,6 @@ function guardarUser() {
     }
 }
 
-// MOTOR DE VISTA
 function seleccionarMarca(brand) {
     currentBrand = brand;
     actualizarVista();

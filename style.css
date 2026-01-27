@@ -2,44 +2,42 @@
 body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; overflow-x: hidden; }
 .hidden { display: none !important; }
 
-.admin-trigger { position: fixed; top: 0; left: 0; width: 50px; height: 50px; z-index: 9999; }
-
 /* TABLAS ESTILO IMAGEN 1 */
 .table-container { background: #000; border-radius: 12px; margin-top: 15px; overflow: hidden; padding: 5px; }
-table { width: 100%; border-collapse: collapse; text-align: left; }
-th { padding: 12px; border-bottom: 1px solid #222; font-size: 0.9rem; color: #fff; }
+table { width: 100%; border-collapse: collapse; }
+th { padding: 12px; border-bottom: 1px solid #222; text-align: left; font-size: 0.9rem; }
 td { padding: 12px; border-bottom: 1px solid #111; font-size: 0.85rem; }
-
 .badge-peli { background: var(--green); color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; text-transform: uppercase; }
-.btn-del { background: #333; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
 
-/* BOTÓN PUBLICAR VERDE */
-.btn-green-pub { background: var(--green); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+/* LOGIN CENTRADO Y PEQUEÑO */
+#sc-login { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+.login-container { 
+    width: 90%; max-width: 320px; background: var(--card); 
+    padding: 30px; border-radius: 15px; text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.logo-title { font-size: 2rem; margin-bottom: 20px; color: #fff; }
+.logo-title span { color: var(--blue); }
 
-/* NAVBAR Y MARCAS */
-.navbar { padding: 15px; background: #0b0e19; border-bottom: 1px solid #1a1d29; }
-.nav-top { display: flex; justify-content: space-between; align-items: center; }
-#search-box { background: var(--input); border: none; color: white; padding: 10px; border-radius: 8px; width: 140px; }
-.brand-bar { display: flex; gap: 10px; overflow-x: auto; padding: 15px 0; }
-.brand-bar::-webkit-scrollbar { display: none; }
-.brand-bar button { background: var(--card); color: white; border: 1px solid #333; padding: 10px 18px; border-radius: 8px; white-space: nowrap; }
+/* REPRODUCTOR CON SCROLL */
+.player-overlay { 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: #000; z-index: 10000; overflow-y: auto; /* Permite bajar en series */
+}
+.player-header { 
+    position: sticky; top: 0; background: #000; padding: 15px; 
+    display: flex; justify-content: space-between; align-items: center; 
+    border-bottom: 1px solid #222; z-index: 10001;
+}
+.btn-cerrar-repro { background: var(--red); color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+.video-frame { width: 100%; aspect-ratio: 16/9; background: #000; }
+.episodes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 10px; padding: 10px 0; }
+#season-selector { width: 100%; padding: 10px; background: var(--input); color: white; border-radius: 8px; border: 1px solid #333; }
 
-/* GRID CATALOGO */
-.movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; padding: 15px; }
-.poster { width: 100%; aspect-ratio: 2/3; background-size: cover; border-radius: 8px; transition: 0.3s; cursor: pointer; }
-.poster:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--blue); }
-
-/* REPRODUCTOR */
-.player-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 10000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-.player-container { width: 95%; max-width: 900px; }
-.video-frame { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid #333; }
-.video-frame iframe { width: 100%; height: 100%; }
-#season-selector { background: var(--input); color: white; border: 1px solid #444; padding: 10px; border-radius: 8px; width: 100%; max-width: 200px; }
-.episodes-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
-.btn-ep { background: var(--card); color: white; border: 1px solid #444; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
-
-/* ADMIN CARD */
-.admin-card { background: #1a1d29; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
-textarea { width: 100%; background: var(--input); color: white; border: none; border-radius: 8px; padding: 10px; box-sizing: border-box; margin-bottom: 10px; font-family: inherit; }
-input, select { width: 100%; padding: 12px; margin-bottom: 10px; background: var(--input); border: none; color: white; border-radius: 8px; box-sizing: border-box; }
+/* OTROS ESTILOS */
+.admin-card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+input, select, textarea { width: 100%; padding: 12px; margin-bottom: 10px; background: var(--input); border: none; color: white; border-radius: 8px; box-sizing: border-box; }
 .btn-blue { background: var(--blue); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
+.btn-green-pub { background: var(--green); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
+.movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; padding: 15px; }
+.poster { width: 100%; aspect-ratio: 2/3; background-size: cover; border-radius: 8px; cursor: pointer; }

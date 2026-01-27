@@ -10,7 +10,7 @@ let movies = [];
 let currentBrand = 'disney';
 let currentType = 'pelicula';
 
-// --- TIEMPO REAL ---
+// --- SYNC FIREBASE ---
 onValue(ref(db, 'users'), (s) => {
     const d = s.val();
     users = d ? Object.keys(d).map(k => ({...d[k], id: k})) : [];
@@ -24,47 +24,28 @@ onValue(ref(db, 'movies'), (s) => {
     renderMovieTable();
 });
 
-// --- USUARIOS ---
-window.guardarUser = function() {
-    const u = document.getElementById('adm-un').value;
-    const p = document.getElementById('adm-up').value;
-    const d = document.getElementById('adm-ud').value;
-    if(u && p && d) {
-        push(ref(db, 'users'), { u, p, d }).then(() => {
-            alert("Usuario Guardado");
-            document.getElementById('adm-un').value = "";
-            document.getElementById('adm-up').value = "";
-        });
-    }
-};
-
-window.borrarUser = function(id) { if(confirm("¿Eliminar?")) remove(ref(db, `users/${id}`)); };
-
-function renderUserTable() {
-    const table = document.getElementById('user-list');
-    if(!table) return;
-    let h = `<tr><th>Usuario</th><th>Vence</th><th>X</th></tr>`;
-    users.forEach(u => {
-        h += `<tr><td>${u.u}</td><td>${u.d}</td><td><button onclick="borrarUser('${u.id}')">✖</button></td></tr>`;
-    });
-    table.innerHTML = h;
-}
-
 // --- ACCESO ---
 window.entrar = function() {
     const u = document.getElementById('log-u').value;
     const p = document.getElementById('log-p').value;
-    if(u === "admin" && p === "2026") { switchScreen('sc-main'); return; }
+    
+    if(u === "admin" && p === "2026") {
+        document.getElementById('u-name').innerText = "Admin Nebula+";
+        switchScreen('sc-main');
+        return;
+    }
+
     const user = users.find(x => x.u === u && x.p === p);
     if(user) {
-        if(new Date().toISOString().split('T')[0] > user.d) return alert("Cuenta expirada");
+        const hoy = new Date().toISOString().split('T')[0];
+        if(hoy > user.d) return alert("Cuenta expirada.");
         document.getElementById('u-name').innerText = "Hola, " + u;
         switchScreen('sc-main');
-    } else { alert("Denegado"); }
+    } else { alert("Error de acceso"); }
 };
 
 window.abrirAdmin = function() {
-    if(prompt("CLAVE:") === "2026") switchScreen('sc-admin');
+    if(prompt("CLAVE MAESTRA:") === "2026") switchScreen('sc-admin');
 };
 
 function switchScreen(id) {
@@ -72,7 +53,9 @@ function switchScreen(id) {
     document.getElementById(id).classList.remove('hidden');
 }
 
-// --- CONTENIDO (CON CUADROS IDENTIFICADORES) ---
+window.cerrarSesion = function() { location.reload(); };
+
+// --- GESTIÓN DB ---
 window.guardarContenido = function() {
     const title = document.getElementById('c-title').value;
     const poster = document.getElementById('c-post').value;
@@ -81,30 +64,26 @@ window.guardarContenido = function() {
     const type = document.getElementById('c-type').value;
 
     if(title && poster && video) {
-        push(ref(db, 'movies'), {title, poster, video, brand, type})
-        .then(() => {
-            alert("Publicado como: " + type.toUpperCase());
-            document.getElementById('c-title').value = "";
-            document.getElementById('c-post').value = "";
-            document.getElementById('c-video').value = "";
-        });
+        push(ref(db, 'movies'), {title, poster, video, brand, type});
+        document.getElementById('c-title').value = "";
+        document.getElementById('c-post').value = "";
+        document.getElementById('c-video').value = "";
+        alert("¡Contenido subido!");
     }
 };
 
-window.borrarMovie = function(id) { if(confirm("¿Eliminar?")) remove(ref(db, `movies/${id}`)); };
+window.borrarMovie = function(id) { if(confirm("¿Borrar?")) remove(ref(db, `movies/${id}`)); };
 
-function renderMovieTable() {
-    const table = document.getElementById('movie-list');
-    if(!table) return;
-    let h = `<tr><th>Título</th><th>Identificador</th><th>X</th></tr>`;
-    movies.forEach(m => {
-        const badge = m.type === 'pelicula' ? '<span class="badge-peli">PELÍCULA</span>' : '<span class="badge-serie">SERIE</span>';
-        h += `<tr><td>${m.title}</td><td>${badge}</td><td><button onclick="borrarMovie('${m.id}')">✖</button></td></tr>`;
-    });
-    table.innerHTML = h;
-}
+window.guardarUser = function() {
+    const u = document.getElementById('adm-un').value;
+    const p = document.getElementById('adm-up').value;
+    const d = document.getElementById('adm-ud').value;
+    if(u && p && d) push(ref(db, 'users'), {u, p, d});
+};
 
-// --- VISTA Y FILTROS ---
+window.borrarUser = function(id) { remove(ref(db, `users/${id}`)); };
+
+// --- VISTA Y CATÁLOGO ---
 window.seleccionarMarca = function(b) { currentBrand = b; actualizarVista(); };
 window.cambiarTipo = function(t) {
     currentType = t;
@@ -118,42 +97,43 @@ function actualizarVista() {
     if(!grid) return;
     document.getElementById('cat-title').innerText = `${currentBrand.toUpperCase()} > ${currentType.toUpperCase()}`;
     const fil = movies.filter(m => m.brand === currentBrand && m.type === currentType);
-    grid.innerHTML = fil.map(m => `<div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>`).join('');
+    
+    // Aquí pasamos el ID único de Firebase a la función reproducir
+    grid.innerHTML = fil.map(m => `
+        <div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.id}')"></div>
+    `).join('');
 }
 
-// --- REPRODUCTOR (EL CEREBRO QUE SEPARA) ---
-window.reproducir = function(url, titulo) {
-    const frame = document.getElementById('main-iframe');
-    const playerTitle = document.getElementById('player-title');
-    const status = document.getElementById('player-status');
-    
-    frame.src = ""; 
-    playerTitle.innerHTML = titulo; 
-
-    // Si tiene comas o barras, genera episodios. Si no, carga directo.
-    if (url.includes(',') || url.includes('|')) {
-        const temporadas = url.split('|');
-        status.innerText = "Selecciona Episodio";
-        let htmlSeries = `<div style="max-height: 250px; overflow-y: auto; margin-top: 15px;">`;
-        temporadas.forEach((temp, tIndex) => {
-            const capitulos = temp.split(',');
-            htmlSeries += `<h4 style="color:var(--blue); margin: 15px 0 5px 0;">Temporada ${tIndex + 1}</h4><div class="lista-episodios">`;
-            capitulos.forEach((link, eIndex) => {
-                htmlSeries += `<button class="btn-ep" onclick="cargarVideo('${link.trim()}', 'T${tIndex + 1}-E${eIndex + 1}')">▶ EP. ${eIndex + 1}</button>`;
-            });
-            htmlSeries += `</div>`;
-        });
-        playerTitle.innerHTML = titulo + htmlSeries + `</div>`;
-    } else {
-        frame.src = url;
-        status.innerText = "Reproduciendo Película";
-    }
-    document.getElementById('video-player').classList.remove('hidden');
+window.buscar = function() {
+    const q = document.getElementById('search-box').value.toLowerCase();
+    const fil = movies.filter(m => m.title.toLowerCase().includes(q));
+    document.getElementById('grid').innerHTML = fil.map(m => `
+        <div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.id}')"></div>
+    `).join('');
 };
 
-window.cargarVideo = function(link, info) {
-    document.getElementById('main-iframe').src = link;
-    document.getElementById('player-status').innerText = "Viendo: " + info;
+// --- REPRODUCTOR DINÁMICO (CORREGIDO) ---
+window.reproducir = function(id) {
+    const item = movies.find(m => m.id === id);
+    if(!item) return;
+
+    const frame = document.getElementById('main-iframe');
+    const serieControls = document.getElementById('serie-controls');
+    
+    frame.src = item.video;
+    document.getElementById('player-title').innerText = item.title;
+    
+    // DETECTAR TIPO PARA MOSTRAR/OCULTAR EPISODIOS
+    if(item.type === "serie") {
+        serieControls.classList.remove('hidden');
+        document.getElementById('player-status').innerText = "Viendo Serie";
+    } else {
+        serieControls.classList.add('hidden');
+        document.getElementById('player-status').innerText = "Viendo Película";
+    }
+
+    document.getElementById('video-player').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
 };
 
 window.cerrarReproductor = function() {
@@ -162,5 +142,17 @@ window.cerrarReproductor = function() {
     document.body.style.overflow = 'auto';
 };
 
-window.cerrarSesion = function() { location.reload(); };
+window.cambiarEp = function(n) { alert("Cargando episodio " + n + "..."); };
+
+// --- TABLAS ADMIN ---
+function renderMovieTable() {
+    let h = `<tr><th>Título</th><th>Tipo</th><th>X</th></tr>`;
+    movies.forEach(m => h += `<tr><td>${m.title}</td><td>${m.type}</td><td><button onclick="borrarMovie('${m.id}')">✖</button></td></tr>`);
+    document.getElementById('movie-list').innerHTML = h;
+}
+function renderUserTable() {
+    let h = `<tr><th>Usuario</th><th>Vence</th><th>X</th></tr>`;
+    users.forEach(u => h += `<tr><td>${u.u}</td><td>${u.d}</td><td><button onclick="borrarUser('${u.id}')">✖</button></td></tr>`);
+    document.getElementById('user-list').innerHTML = h;
+}
 window.toggleMenu = function() { document.getElementById('drop-menu').classList.toggle('hidden'); };

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nebula+ | Premium Experience</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -96,11 +98,8 @@
     <div id="video-player" class="player-overlay hidden">
         <div class="player-container">
             <button class="close-player" onclick="cerrarReproductor()">✕ CERRAR</button>
-            
             <div class="video-frame"></div>
-            
             <h2 id="player-title">Título</h2>
-            
             <div id="serie-controls" class="hidden" style="margin-top: 20px; text-align: left;">
                 <h3 style="color: #0063e5; margin-bottom: 10px;">Temporadas</h3>
                 <select id="season-selector" onchange="cargarTemporada(this.value)" style="width: auto; margin-bottom: 15px;"></select>

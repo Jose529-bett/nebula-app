@@ -1,4 +1,4 @@
-:root { --bg: #040714; --card: #1a1d29; --blue: #0063e5; --input: #31343e; }
+root { --bg: #040714; --card: #1a1d29; --blue: #0063e5; --input: #31343e; }
 body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
 .hidden { display: none !important; }
 .login-container { width: 320px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }

@@ -3,28 +3,25 @@ const firebaseConfig = {
     databaseURL: "https://nebula-plus-app-default-rtdb.firebaseio.com/"
 };
 
-// Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Variables Globales de Estado
 let users = [];
 let movies = [];
 let currentBrand = 'disney';
 let currentType = 'pelicula';
 let datosSerieActual = [];
 let primeraCarga = true;
+let hlsInstance = null; // Guardamos la instancia para destruirla limpiamente
 
-// --- ESCUCHADORES EN TIEMPO REAL (FIREBASE) ---
+// --- ESCUCHADORES EN TIEMPO REAL ---
 
-// Sincronizar Usuarios
 db.ref('users').on('value', snapshot => {
     const data = snapshot.val();
     users = data ? Object.values(data) : [{u:'admin', p:'1234', d:'2026-12-31'}];
     renderUserTable();
 });
 
-// Sincronizar Contenido (Optimizado)
 db.ref('movies').on('value', snapshot => {
     const data = snapshot.val();
     movies = [];
@@ -34,7 +31,6 @@ db.ref('movies').on('value', snapshot => {
         }
     }
     
-    // Solo refresca la vista si no estamos dentro del reproductor para evitar cortes
     if(primeraCarga || document.getElementById('video-player').classList.contains('hidden')) {
         actualizarVista();
         renderMovieTable();
@@ -72,7 +68,7 @@ function toggleMenu() {
     document.getElementById('drop-menu').classList.toggle('hidden'); 
 }
 
-// --- MOTOR DE REPRODUCCIÓN Y SERIES ---
+// --- MOTOR DE REPRODUCCIÓN ---
 
 function reproducir(cadenaVideo, titulo) {
     const player = document.getElementById('video-player');
@@ -83,19 +79,17 @@ function reproducir(cadenaVideo, titulo) {
     player.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 
-    // Buscamos si el item es serie o película
     const item = movies.find(m => m.title === titulo && m.video === cadenaVideo);
 
     if(item && item.type === 'serie') {
         serieControls.classList.remove('hidden');
-        // El formato esperado es: link1, link2 | link_t2_cap1, link_t2_cap2
         const temporadas = item.video.split('|');
         datosSerieActual = temporadas.map(t => t.split(','));
         
         const selector = document.getElementById('season-selector');
         selector.innerHTML = datosSerieActual.map((_, i) => `<option value="${i}">Temporada ${i+1}</option>`).join('');
         
-        cargarTemporada(0); // Cargar temporada 1 por defecto
+        cargarTemporada(0);
     } else {
         serieControls.classList.add('hidden');
         gestionarFuenteVideo(cadenaVideo);
@@ -104,25 +98,41 @@ function reproducir(cadenaVideo, titulo) {
 
 function gestionarFuenteVideo(url) {
     const videoFrame = document.querySelector('.video-frame');
-    videoFrame.innerHTML = ''; // Limpiar reproductor previo
-    const urlLimpia = url.trim();
     
-    // Detectar si es un archivo directo (.m3u8 o .mp4)
+    // Destruir instancia previa de HLS si existe para liberar memoria y red
+    if (hlsInstance) {
+        hlsInstance.destroy();
+        hlsInstance = null;
+    }
+    
+    videoFrame.innerHTML = ''; 
+    const urlLimpia = url.trim();
     const esVideoDirecto = urlLimpia.toLowerCase().includes('.m3u8') || urlLimpia.toLowerCase().includes('.mp4');
 
     if (esVideoDirecto) {
-        videoFrame.innerHTML = `<video id="main-v" controls autoplay style="width:100%; height:100%; background:#000;"></video>`;
+        // Atributos clave: preload="auto" y playsinline para carga inmediata
+        videoFrame.innerHTML = `<video id="main-v" controls autoplay playsinline preload="auto" style="width:100%; height:100%; background:#000;"></video>`;
         const video = document.getElementById('main-v');
         
-        if (Hls.isSupported() && urlLimpia.includes('.m3u8')) {
-            const hls = new Hls();
-            hls.loadSource(urlLimpia);
-            hls.attachMedia(video);
+        if (urlLimpia.includes('.m3u8')) {
+            if (Hls.isSupported()) {
+                hlsInstance = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    manifestLoadingMaxRetry: 4,
+                    levelLoadingMaxRetry: 4
+                });
+                hlsInstance.loadSource(urlLimpia);
+                hlsInstance.attachMedia(video);
+                hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = urlLimpia;
+            }
         } else { 
-            video.src = urlLimpia; 
+            video.src = urlLimpia;
+            video.load(); // Inicia la precarga del buffer inmediatamente
         }
     } else {
-        // Si es un embed (YouTube, Fembed, etc)
         videoFrame.innerHTML = `<iframe src="${urlLimpia}" frameborder="0" allowfullscreen style="width:100%; height:100%;"></iframe>`;
     }
 }
@@ -135,11 +145,14 @@ function cargarTemporada(idx) {
         <button class="btn-ep" onclick="gestionarFuenteVideo('${link.trim()}')">EP. ${i+1}</button>
     `).join('');
     
-    // Auto-reproducir el primer capítulo de la temporada
     gestionarFuenteVideo(capitulos[0].trim());
 }
 
 function cerrarReproductor() {
+    if (hlsInstance) {
+        hlsInstance.destroy();
+        hlsInstance = null;
+    }
     document.querySelector('.video-frame').innerHTML = '';
     document.getElementById('video-player').classList.add('hidden');
     document.body.style.overflow = 'auto';
@@ -164,20 +177,17 @@ function guardarContenido() {
 
     if(title && poster && video) {
         db.ref('movies').push({title, poster, video, brand, type});
-        // Limpiar campos
         document.getElementById('c-title').value = "";
         document.getElementById('c-post').value = "";
         document.getElementById('c-video').value = "";
-        alert("¡Contenido subido a la nube con éxito!");
+        alert("¡Contenido subido con éxito!");
     } else {
-        alert("Por favor rellena todos los campos");
+        alert("Rellena todos los campos");
     }
 }
 
 function borrarMovie(id) {
-    if(confirm("¿Seguro que quieres eliminar este contenido?")) {
-        db.ref('movies/' + id).remove();
-    }
+    if(confirm("¿Eliminar contenido?")) db.ref('movies/' + id).remove();
 }
 
 function guardarUser() {
@@ -186,7 +196,7 @@ function guardarUser() {
     const d = document.getElementById('adm-ud').value;
     if(u && p && d) {
         db.ref('users').push({u, p, d});
-        alert("Usuario creado exitosamente");
+        alert("Usuario creado");
     }
 }
 
@@ -198,7 +208,7 @@ function borrarUser(uNombre) {
     });
 }
 
-// --- GESTIÓN DE INTERFAZ Y FILTROS ---
+// --- INTERFAZ ---
 
 function seleccionarMarca(brand) { 
     currentBrand = brand; 
@@ -215,9 +225,7 @@ function cambiarTipo(type) {
 function actualizarVista() {
     const grid = document.getElementById('grid');
     if(!grid) return;
-    
     document.getElementById('cat-title').innerText = currentBrand.toUpperCase() + " > " + currentType.toUpperCase();
-    
     const filtrados = movies.filter(m => m.brand === currentBrand && m.type === currentType);
     
     grid.innerHTML = filtrados.map(m => `

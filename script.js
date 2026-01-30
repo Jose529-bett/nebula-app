@@ -41,7 +41,7 @@ function switchScreen(id) {
 function cerrarSesion() { document.getElementById('drop-menu').classList.add('hidden'); switchScreen('sc-login'); }
 function toggleMenu() { document.getElementById('drop-menu').classList.toggle('hidden'); }
 
-// REPRODUCTOR ESTILO GOOGLE (Sin botón de descarga)
+// REPRODUCCIÓN (Ajustada para detectar toques en vertical y horizontal)
 function reproducir(cadenaVideo, titulo) {
     const player = document.getElementById('video-player');
     document.getElementById('player-title').innerText = titulo;
@@ -69,11 +69,11 @@ function gestionarFuenteVideo(url) {
     const esVideoDirecto = urlLimpia.toLowerCase().includes('.m3u8') || urlLimpia.toLowerCase().includes('.mp4');
 
     if (esVideoDirecto) {
-        // Estructura idéntica al reproductor de Google pero con bloqueo de descarga
-        // Usamos preload="metadata" para que el botón de Play sea el que mande la orden de carga
+        // AJUSTE MAESTRO: Agregamos "pointer-events: auto" y "z-index" para asegurar que la App 
+        // reciba el toque del dedo incluso en vertical.
         videoFrame.innerHTML = `<video id="main-v" controls playsinline preload="metadata" 
                                 controlsList="nodownload" oncontextmenu="return false;"
-                                style="width:100%; height:100%; background:#000;"></video>`;
+                                style="width:100%; height:100%; background:#000; pointer-events: auto; display: block;"></video>`;
         const video = document.getElementById('main-v');
         
         if (urlLimpia.toLowerCase().includes('.m3u8') && Hls.isSupported()) {
@@ -84,11 +84,11 @@ function gestionarFuenteVideo(url) {
             video.src = urlLimpia; 
         }
         
-        // Al usar preload="metadata", el botón de Play funcionará de forma nativa y rápida
+        // Al tocar el video en la App, forzamos el inicio
+        video.onclick = () => { if(video.paused) video.play(); };
     } else {
         videoFrame.innerHTML = `<iframe src="${urlLimpia}" frameborder="0" allowfullscreen 
-                                oncontextmenu="return false;"
-                                style="width:100%; height:100%;"></iframe>`;
+                                style="width:100%; height:100%; pointer-events: auto;"></iframe>`;
     }
 }
 

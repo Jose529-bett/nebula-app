@@ -69,7 +69,7 @@ function gestionarFuenteVideo(url) {
     const esVideoDirecto = urlLimpia.toLowerCase().includes('.m3u8') || urlLimpia.toLowerCase().includes('.mp4');
 
     if (esVideoDirecto) {
-        // OPTIMIZACIÓN: Cambiamos preload="metadata" por "auto" para carga inmediata
+        // AJUSTE: Mantenemos tu estructura original, solo cambiamos preload a "auto" para mejorar el uso de red
         videoFrame.innerHTML = `<video id="main-v" controls autoplay playsinline preload="auto" 
                                 controlsList="nodownload" oncontextmenu="return false;"
                                 style="width:100%; height:100%; background:#000;"></video>`;
@@ -80,8 +80,8 @@ function gestionarFuenteVideo(url) {
             hlsInstance.loadSource(urlLimpia);
             hlsInstance.attachMedia(video);
         } else { 
-            // OPTIMIZACIÓN: Añadimos #t=0.1 para que el servidor responda al instante
-            video.src = urlLimpia + "#t=0.1"; 
+            // URL LIMPIA: Sin añadidos externos, para que Archive.org no dé error
+            video.src = urlLimpia; 
         }
     } else {
         videoFrame.innerHTML = `<iframe src="${urlLimpia}" frameborder="0" allowfullscreen 

@@ -1,4 +1,4 @@
-// // CONFIGURACIÓN DE TU FIREBASE
+// CONFIGURACIÓN DE TU FIREBASE
 const firebaseConfig = { databaseURL: "https://nebula-plus-app-default-rtdb.firebaseio.com/" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
@@ -69,7 +69,7 @@ function gestionarFuenteVideo(url) {
     const esVideoDirecto = urlLimpia.toLowerCase().includes('.m3u8') || urlLimpia.toLowerCase().includes('.mp4');
 
     if (esVideoDirecto) {
-        // AJUSTE: Mantenemos tu estructura original, solo cambiamos preload a "auto" para mejorar el uso de red
+        // Mantenemos tu estructura original con preload="auto"
         videoFrame.innerHTML = `<video id="main-v" controls autoplay playsinline preload="auto" 
                                 controlsList="nodownload" oncontextmenu="return false;"
                                 style="width:100%; height:100%; background:#000;"></video>`;
@@ -80,7 +80,6 @@ function gestionarFuenteVideo(url) {
             hlsInstance.loadSource(urlLimpia);
             hlsInstance.attachMedia(video);
         } else { 
-            // URL LIMPIA: Sin añadidos externos, para que Archive.org no dé error
             video.src = urlLimpia; 
         }
     } else {
@@ -148,4 +147,3 @@ function buscar() {
     const filtered = movies.filter(m => m.title.toLowerCase().includes(q));
     document.getElementById('grid').innerHTML = filtered.map(m => `<div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>`).join('');
 }
- Y VISTAS

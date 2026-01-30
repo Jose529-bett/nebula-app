@@ -69,8 +69,8 @@ function gestionarFuenteVideo(url) {
     const esVideoDirecto = urlLimpia.toLowerCase().includes('.m3u8') || urlLimpia.toLowerCase().includes('.mp4');
 
     if (esVideoDirecto) {
-        // AJUSTE: Mantenemos tu estructura original, solo cambiamos preload a "auto" para mejorar el uso de red
-        videoFrame.innerHTML = `<video id="main-v" controls autoplay playsinline preload="auto" 
+        // SEGURIDAD Y VELOCIDAD: Usamos preload="metadata" para que la App física no se trabe al conectar
+        videoFrame.innerHTML = `<video id="main-v" controls autoplay playsinline preload="metadata" 
                                 controlsList="nodownload" oncontextmenu="return false;"
                                 style="width:100%; height:100%; background:#000;"></video>`;
         const video = document.getElementById('main-v');
@@ -80,7 +80,7 @@ function gestionarFuenteVideo(url) {
             hlsInstance.loadSource(urlLimpia);
             hlsInstance.attachMedia(video);
         } else { 
-            // URL LIMPIA: Sin añadidos externos, para que Archive.org no dé error
+            // Carga directa para MP4 sin modificar la URL
             video.src = urlLimpia; 
         }
     } else {

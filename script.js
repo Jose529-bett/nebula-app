@@ -6,7 +6,7 @@ const db = firebase.database();
 let users = []; let movies = []; let currentBrand = 'disney'; let currentType = 'pelicula';
 let datosSerieActual = []; let primeraCarga = true; let hlsInstance = null;
 
-// ESCUCHADORES FIREBASE
+// ESCUCHADORES FIREBASE (Se mantienen igual que tus fotos)
 db.ref('users').on('value', snap => {
     const data = snap.val();
     users = data ? Object.values(data) : [{u:'admin', p:'1234', d:'2026-12-31'}];
@@ -41,7 +41,7 @@ function switchScreen(id) {
 function cerrarSesion() { document.getElementById('drop-menu').classList.add('hidden'); switchScreen('sc-login'); }
 function toggleMenu() { document.getElementById('drop-menu').classList.toggle('hidden'); }
 
-// MOTOR DE REPRODUCCIÓN PROTEGIDO (Sin botón de descarga)
+// MOTOR DE REPRODUCCIÓN (Optimizado para carga rápida)
 function reproducir(cadenaVideo, titulo) {
     const player = document.getElementById('video-player');
     document.getElementById('player-title').innerText = titulo;
@@ -69,10 +69,8 @@ function gestionarFuenteVideo(url) {
     const esVideoDirecto = urlLimpia.toLowerCase().includes('.m3u8') || urlLimpia.toLowerCase().includes('.mp4');
 
     if (esVideoDirecto) {
-        // Mantenemos tu estructura original con preload="auto"
-        videoFrame.innerHTML = `<video id="main-v" controls autoplay playsinline preload="auto" 
-                                controlsList="nodownload" oncontextmenu="return false;"
-                                style="width:100%; height:100%; background:#000;"></video>`;
+        // Añadimos preload="metadata" para que arranque instantáneo
+        videoFrame.innerHTML = `<video id="main-v" controls autoplay playsinline preload="metadata" style="width:100%; height:100%; background:#000;"></video>`;
         const video = document.getElementById('main-v');
         
         if (urlLimpia.toLowerCase().includes('.m3u8') && Hls.isSupported()) {
@@ -83,9 +81,7 @@ function gestionarFuenteVideo(url) {
             video.src = urlLimpia; 
         }
     } else {
-        videoFrame.innerHTML = `<iframe src="${urlLimpia}" frameborder="0" allowfullscreen 
-                                oncontextmenu="return false;"
-                                style="width:100%; height:100%;"></iframe>`;
+        videoFrame.innerHTML = `<iframe src="${urlLimpia}" frameborder="0" allowfullscreen style="width:100%; height:100%;"></iframe>`;
     }
 }
 
@@ -103,7 +99,7 @@ function cerrarReproductor() {
     document.body.style.overflow = 'auto';
 }
 
-// ADMINISTRACIÓN Y VISTAS
+// ADMINISTRACIÓN Y VISTAS (Se mantienen exactamente iguales)
 function abrirAdmin() { if(prompt("CÓDIGO:") === "2026") { switchScreen('sc-admin'); renderUserTable(); renderMovieTable(); } }
 function guardarContenido() {
     const title = document.getElementById('c-title').value;

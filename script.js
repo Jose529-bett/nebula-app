@@ -69,20 +69,20 @@ function gestionarFuenteVideo(url) {
     const esVideoDirecto = urlLimpia.toLowerCase().includes('.m3u8') || urlLimpia.toLowerCase().includes('.mp4');
 
     if (esVideoDirecto) {
-        // AJUSTE DE VELOCIDAD: Cambiado preload a "auto" y añadido truco de inicio rápido #t=0.1
+        // OPTIMIZACIÓN: Cambiamos preload="metadata" por "auto" para carga inmediata
         videoFrame.innerHTML = `<video id="main-v" controls autoplay playsinline preload="auto" 
                                 controlsList="nodownload" oncontextmenu="return false;"
-                                style="width:100%; height:100%; background:#000;">
-                                <source src="${urlLimpia}#t=0.1" type="video/mp4">
-                                </video>`;
+                                style="width:100%; height:100%; background:#000;"></video>`;
         const video = document.getElementById('main-v');
         
         if (urlLimpia.toLowerCase().includes('.m3u8') && Hls.isSupported()) {
             hlsInstance = new Hls({ capLevelToPlayerSize: true, autoStartLoad: true });
             hlsInstance.loadSource(urlLimpia);
             hlsInstance.attachMedia(video);
+        } else { 
+            // OPTIMIZACIÓN: Añadimos #t=0.1 para que el servidor responda al instante
+            video.src = urlLimpia + "#t=0.1"; 
         }
-        // Nota: Para MP4 la etiqueta <source> arriba ya gestiona la velocidad automáticamente
     } else {
         videoFrame.innerHTML = `<iframe src="${urlLimpia}" frameborder="0" allowfullscreen 
                                 oncontextmenu="return false;"

@@ -9,7 +9,14 @@ let datosSerieActual = []; let primeraCarga = true; let hlsInstance = null;
 // ESCUCHADORES FIREBASE
 db.ref('users').on('value', snap => {
     const data = snap.val();
-    users = data ? Object.values(data) : [{u:'admin', p:'1234', d:'2026-12-31'}];
+    users = [];
+    if(data) { 
+        for(let id in data) { 
+            users.push({ ...data[id], firebaseId: id }); 
+        } 
+    } else {
+        users = [{u:'admin', p:'1234', d:'2026-12-31'}];
+    }
     renderUserTable();
 });
 
@@ -41,7 +48,7 @@ function switchScreen(id) {
 function cerrarSesion() { document.getElementById('drop-menu').classList.add('hidden'); switchScreen('sc-login'); }
 function toggleMenu() { document.getElementById('drop-menu').classList.toggle('hidden'); }
 
-// MOTOR DE REPRODUCCIÓN (Protegido y Automático)
+// MOTOR DE REPRODUCCIÓN
 function reproducir(cadenaVideo, titulo) {
     const player = document.getElementById('video-player');
     document.getElementById('player-title').innerText = titulo;
@@ -69,31 +76,17 @@ function gestionarFuenteVideo(url) {
     const esVideoDirecto = urlLimpia.toLowerCase().includes('.m3u8') || urlLimpia.toLowerCase().includes('.mp4');
 
     if (esVideoDirecto) {
-        // Bloqueo de descarga y reproducción automática habilitada
         videoFrame.innerHTML = `
-            <video 
-                id="main-v" 
-                controls 
-                autoplay 
-                playsinline 
-                preload="metadata" 
-                controlsList="nodownload" 
-                oncontextmenu="return false;"
-                style="width:100%; height:100%; background:#000;">
-            </video>`;
-        
+            <video id="main-v" controls autoplay playsinline preload="metadata" controlsList="nodownload" oncontextmenu="return false;" style="width:100%; height:100%; background:#000;"></video>`;
         const video = document.getElementById('main-v');
-        
         if (urlLimpia.toLowerCase().includes('.m3u8') && Hls.isSupported()) {
             hlsInstance = new Hls({ capLevelToPlayerSize: true, autoStartLoad: true });
             hlsInstance.loadSource(urlLimpia);
             hlsInstance.attachMedia(video);
-            hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                video.play().catch(e => console.log("Reproducción manual requerida"));
-            });
+            hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(e => {}); });
         } else { 
             video.src = urlLimpia; 
-            video.play().catch(e => console.log("Esperando clic del usuario"));
+            video.play().catch(e => {});
         }
     } else {
         videoFrame.innerHTML = `<iframe src="${urlLimpia}" frameborder="0" allowfullscreen style="width:100%; height:100%;"></iframe>`;
@@ -114,8 +107,27 @@ function cerrarReproductor() {
     document.body.style.overflow = 'auto';
 }
 
-// ADMINISTRACIÓN Y VISTAS
-function abrirAdmin() { if(prompt("CÓDIGO:") === "2026") { switchScreen('sc-admin'); renderUserTable(); renderMovieTable(); } }
+// ADMINISTRACIÓN - AQUÍ ESTABAN LOS ERRORES
+function abrirAdmin() { if(prompt("CÓDIGO:") === "2026") { switchScreen('sc-admin'); } }
+
+function guardarUser() {
+    const u = document.getElementById('adm-un').value;
+    const p = document.getElementById('adm-up').value;
+    const d = document.getElementById('adm-ud').value;
+    if(u && p && d) {
+        db.ref('users').push({u, p, d});
+        alert("Usuario Guardado");
+        document.getElementById('adm-un').value = '';
+        document.getElementById('adm-up').value = '';
+    } else { alert("Completa todos los campos"); }
+}
+
+function borrarUser(id) { 
+    if(confirm("¿Eliminar usuario?")) {
+        db.ref('users/' + id).remove(); 
+    }
+}
+
 function guardarContenido() {
     const title = document.getElementById('c-title').value;
     const poster = document.getElementById('c-post').value;
@@ -124,13 +136,23 @@ function guardarContenido() {
     const type = document.getElementById('c-type').value;
     if(title && poster && video) {
         db.ref('movies').push({title, poster, video, brand, type});
-        alert("Publicado");
-    }
+        alert("Contenido Publicado");
+        document.getElementById('c-title').value = '';
+        document.getElementById('c-post').value = '';
+        document.getElementById('c-video').value = '';
+    } else { alert("Completa los campos de contenido"); }
 }
 
-function borrarMovie(id) { if(confirm("¿Borrar?")) db.ref('movies/' + id).remove(); }
+function borrarMovie(id) { if(confirm("¿Borrar contenido?")) db.ref('movies/' + id).remove(); }
+
+// VISTAS
 function seleccionarMarca(b) { currentBrand = b; actualizarVista(); }
-function cambiarTipo(t) { currentType = t; actualizarVista(); }
+function cambiarTipo(t) { 
+    currentType = t; 
+    document.getElementById('t-peli').classList.toggle('active', t === 'pelicula');
+    document.getElementById('t-serie').classList.toggle('active', t === 'serie');
+    actualizarVista(); 
+}
 
 function actualizarVista() {
     const grid = document.getElementById('grid');
@@ -143,14 +165,18 @@ function actualizarVista() {
 function renderMovieTable() {
     const table = document.getElementById('movie-list');
     let html = `<tr><th>Título</th><th>Acción</th></tr>`;
-    movies.forEach(m => { html += `<tr><td>${m.title}</td><td><button onclick="borrarMovie('${m.firebaseId}')" style="color:red">Borrar</button></td></tr>`; });
+    movies.forEach(m => { html += `<tr><td>${m.title}</td><td><button onclick="borrarMovie('${m.firebaseId}')" style="color:red; cursor:pointer;">Borrar</button></td></tr>`; });
     table.innerHTML = html;
 }
 
 function renderUserTable() {
     const table = document.getElementById('user-list');
     let html = `<tr><th>Usuario</th><th>Acción</th></tr>`;
-    users.forEach(u => { html += `<tr><td>${u.u}</td><td><button onclick="borrarUser('${u.u}')" style="color:red">Eliminar</button></td></tr>`; });
+    users.forEach(u => { 
+        if(u.firebaseId) {
+            html += `<tr><td>${u.u}</td><td><button onclick="borrarUser('${u.firebaseId}')" style="color:red; cursor:pointer;">Eliminar</button></td></tr>`; 
+        }
+    });
     table.innerHTML = html;
 }
 

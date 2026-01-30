@@ -1,4 +1,4 @@
-// CONFIGURACIÓN DE TU FIREBASE
+// // CONFIGURACIÓN DE TU FIREBASE
 const firebaseConfig = { databaseURL: "https://nebula-plus-app-default-rtdb.firebaseio.com/" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
@@ -41,7 +41,7 @@ function switchScreen(id) {
 function cerrarSesion() { document.getElementById('drop-menu').classList.add('hidden'); switchScreen('sc-login'); }
 function toggleMenu() { document.getElementById('drop-menu').classList.toggle('hidden'); }
 
-// REPRODUCCIÓN (Ajustada para detectar toques en vertical y horizontal)
+// MOTOR DE REPRODUCCIÓN PROTEGIDO (Sin botón de descarga)
 function reproducir(cadenaVideo, titulo) {
     const player = document.getElementById('video-player');
     document.getElementById('player-title').innerText = titulo;
@@ -69,11 +69,10 @@ function gestionarFuenteVideo(url) {
     const esVideoDirecto = urlLimpia.toLowerCase().includes('.m3u8') || urlLimpia.toLowerCase().includes('.mp4');
 
     if (esVideoDirecto) {
-        // AJUSTE MAESTRO: Agregamos "pointer-events: auto" y "z-index" para asegurar que la App 
-        // reciba el toque del dedo incluso en vertical.
-        videoFrame.innerHTML = `<video id="main-v" controls playsinline preload="metadata" 
+        // AJUSTE: Mantenemos tu estructura original, solo cambiamos preload a "auto" para mejorar el uso de red
+        videoFrame.innerHTML = `<video id="main-v" controls autoplay playsinline preload="auto" 
                                 controlsList="nodownload" oncontextmenu="return false;"
-                                style="width:100%; height:100%; background:#000; pointer-events: auto; display: block;"></video>`;
+                                style="width:100%; height:100%; background:#000;"></video>`;
         const video = document.getElementById('main-v');
         
         if (urlLimpia.toLowerCase().includes('.m3u8') && Hls.isSupported()) {
@@ -81,14 +80,13 @@ function gestionarFuenteVideo(url) {
             hlsInstance.loadSource(urlLimpia);
             hlsInstance.attachMedia(video);
         } else { 
+            // URL LIMPIA: Sin añadidos externos, para que Archive.org no dé error
             video.src = urlLimpia; 
         }
-        
-        // Al tocar el video en la App, forzamos el inicio
-        video.onclick = () => { if(video.paused) video.play(); };
     } else {
         videoFrame.innerHTML = `<iframe src="${urlLimpia}" frameborder="0" allowfullscreen 
-                                style="width:100%; height:100%; pointer-events: auto;"></iframe>`;
+                                oncontextmenu="return false;"
+                                style="width:100%; height:100%;"></iframe>`;
     }
 }
 
@@ -150,3 +148,4 @@ function buscar() {
     const filtered = movies.filter(m => m.title.toLowerCase().includes(q));
     document.getElementById('grid').innerHTML = filtered.map(m => `<div class="poster" style="background-image:url('${m.poster}')" onclick="reproducir('${m.video}', '${m.title}')"></div>`).join('');
 }
+ Y VISTAS

@@ -41,7 +41,7 @@ function switchScreen(id) {
 function cerrarSesion() { document.getElementById('drop-menu').classList.add('hidden'); switchScreen('sc-login'); }
 function toggleMenu() { document.getElementById('drop-menu').classList.toggle('hidden'); }
 
-// MOTOR DE REPRODUCCIÓN PROTEGIDO (Sin botón de descarga)
+// REPRODUCTOR ESTILO GOOGLE (Sin botón de descarga)
 function reproducir(cadenaVideo, titulo) {
     const player = document.getElementById('video-player');
     document.getElementById('player-title').innerText = titulo;
@@ -69,8 +69,9 @@ function gestionarFuenteVideo(url) {
     const esVideoDirecto = urlLimpia.toLowerCase().includes('.m3u8') || urlLimpia.toLowerCase().includes('.mp4');
 
     if (esVideoDirecto) {
-        // SEGURIDAD Y VELOCIDAD: Usamos preload="metadata" para que la App física no se trabe al conectar
-        videoFrame.innerHTML = `<video id="main-v" controls autoplay playsinline preload="metadata" 
+        // Estructura idéntica al reproductor de Google pero con bloqueo de descarga
+        // Usamos preload="metadata" para que el botón de Play sea el que mande la orden de carga
+        videoFrame.innerHTML = `<video id="main-v" controls playsinline preload="metadata" 
                                 controlsList="nodownload" oncontextmenu="return false;"
                                 style="width:100%; height:100%; background:#000;"></video>`;
         const video = document.getElementById('main-v');
@@ -80,9 +81,10 @@ function gestionarFuenteVideo(url) {
             hlsInstance.loadSource(urlLimpia);
             hlsInstance.attachMedia(video);
         } else { 
-            // Carga directa para MP4 sin modificar la URL
             video.src = urlLimpia; 
         }
+        
+        // Al usar preload="metadata", el botón de Play funcionará de forma nativa y rápida
     } else {
         videoFrame.innerHTML = `<iframe src="${urlLimpia}" frameborder="0" allowfullscreen 
                                 oncontextmenu="return false;"

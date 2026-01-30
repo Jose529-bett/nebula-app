@@ -6,17 +6,17 @@ const db = firebase.database();
 let users = []; let movies = []; let currentBrand = 'disney'; let currentType = 'pelicula';
 let datosSerieActual = []; let primeraCarga = true; let hlsInstance = null;
 
-// ESCUCHADORES FIREBASE
+// ESCUCHADORES FIREBASE (Actualizados para capturar IDs correctamente)
 db.ref('users').on('value', snap => {
     const data = snap.val();
     users = [];
     if(data) { 
         for(let id in data) { 
-            // Capturamos el ID de Firebase para que el botón de eliminar funcione
+            // Guardamos el ID de Firebase para poder borrar después
             users.push({ ...data[id], firebaseId: id }); 
         } 
     } else {
-        // Usuario por defecto si la base de datos está vacía
+        // Usuario local por defecto
         users = [{u:'admin', p:'1234', d:'2026-12-31'}];
     }
     renderUserTable();
@@ -105,28 +105,44 @@ function cerrarReproductor() {
     document.body.style.overflow = 'auto';
 }
 
-// ADMINISTRACIÓN - CORREGIDO
+// ADMINISTRACIÓN - CORREGIDO (Guardar y Eliminar)
 function abrirAdmin() { if(prompt("CÓDIGO:") === "2026") { switchScreen('sc-admin'); } }
 
 function guardarUser() {
     const u = document.getElementById('adm-un').value;
     const p = document.getElementById('adm-up').value;
     const d = document.getElementById('adm-ud').value;
+    
     if(u && p && d) {
-        // Publicación con ID automático de Firebase
-        db.ref('users').push({u, p, d}).then(() => {
-            alert("Usuario Guardado y Publicado");
+        // Guardamos en Firebase con los nombres de campos que espera tu sistema
+        db.ref('users').push({
+            u: u,
+            p: p,
+            d: d
+        }).then(() => {
+            alert("¡Usuario '" + u + "' guardado correctamente!");
+            // Limpiamos los campos después de guardar
             document.getElementById('adm-un').value = '';
             document.getElementById('adm-up').value = '';
             document.getElementById('adm-ud').value = '';
+        }).catch((err) => {
+            alert("Error al guardar: " + err.message);
         });
-    } else { alert("Completa todos los campos del usuario"); }
+    } else { 
+        alert("Por favor rellena el nombre, la clave y la fecha"); 
+    }
 }
 
 function borrarUser(id) { 
-    if(confirm("¿Eliminar usuario definitivamente?")) {
-        // Borrado usando el ID único
-        db.ref('users/' + id).remove().then(() => alert("Usuario eliminado"));
+    if(!id) return; // Si es el usuario por defecto, no se puede borrar
+    if(confirm("¿Eliminar este usuario de la base de datos?")) {
+        db.ref('users/' + id).remove()
+        .then(() => {
+            alert("Usuario eliminado con éxito");
+        })
+        .catch((err) => {
+            alert("Error al eliminar: " + err.message);
+        });
     }
 }
 
@@ -168,19 +184,21 @@ function actualizarVista() {
 function renderMovieTable() {
     const table = document.getElementById('movie-list');
     let html = `<tr><th>Título</th><th>Acción</th></tr>`;
-    movies.forEach(m => { html += `<tr><td>${m.title}</td><td><button onclick="borrarMovie('${m.firebaseId}')" style="color:red; cursor:pointer;">Borrar</button></td></tr>`; });
+    movies.forEach(m => { html += `<tr><td>${m.title}</td><td><button onclick="borrarMovie('${m.firebaseId}')" style="color:red; cursor:pointer; background:none; border:1px solid red; padding:2px 5px; border-radius:3px;">Borrar</button></td></tr>`; });
     table.innerHTML = html;
 }
 
 function renderUserTable() {
     const table = document.getElementById('user-list');
+    if(!table) return;
     let html = `<tr><th>Usuario</th><th>Acción</th></tr>`;
     users.forEach(u => { 
-        if(u.firebaseId) {
-            html += `<tr><td>${u.u}</td><td><button onclick="borrarUser('${u.firebaseId}')" style="color:red; cursor:pointer;">Eliminar</button></td></tr>`; 
-        } else {
-            html += `<tr><td>${u.u}</td><td><span style="color:gray">Sistema</span></td></tr>`;
-        }
+        // Solo ponemos el botón de eliminar si el usuario viene de la base de datos (tiene firebaseId)
+        const botonAccion = u.firebaseId 
+            ? `<button onclick="borrarUser('${u.firebaseId}')" style="color:red; cursor:pointer; background:none; border:1px solid red; padding:2px 5px; border-radius:3px;">Eliminar</button>`
+            : `<span style="color:gray">Sistema</span>`;
+            
+        html += `<tr><td>${u.u}</td><td>${botonAccion}</td></tr>`; 
     });
     table.innerHTML = html;
 }

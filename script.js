@@ -12,9 +12,11 @@ db.ref('users').on('value', snap => {
     users = [];
     if(data) { 
         for(let id in data) { 
+            // Capturamos el ID de Firebase para que el botón de eliminar funcione
             users.push({ ...data[id], firebaseId: id }); 
         } 
     } else {
+        // Usuario por defecto si la base de datos está vacía
         users = [{u:'admin', p:'1234', d:'2026-12-31'}];
     }
     renderUserTable();
@@ -76,18 +78,14 @@ function gestionarFuenteVideo(url) {
     const esVideoDirecto = urlLimpia.toLowerCase().includes('.m3u8') || urlLimpia.toLowerCase().includes('.mp4');
 
     if (esVideoDirecto) {
-        videoFrame.innerHTML = `
-            <video id="main-v" controls autoplay playsinline preload="metadata" controlsList="nodownload" oncontextmenu="return false;" style="width:100%; height:100%; background:#000;"></video>`;
+        videoFrame.innerHTML = `<video id="main-v" controls autoplay playsinline preload="metadata" controlsList="nodownload" oncontextmenu="return false;" style="width:100%; height:100%; background:#000;"></video>`;
         const video = document.getElementById('main-v');
         if (urlLimpia.toLowerCase().includes('.m3u8') && Hls.isSupported()) {
             hlsInstance = new Hls({ capLevelToPlayerSize: true, autoStartLoad: true });
             hlsInstance.loadSource(urlLimpia);
             hlsInstance.attachMedia(video);
             hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(e => {}); });
-        } else { 
-            video.src = urlLimpia; 
-            video.play().catch(e => {});
-        }
+        } else { video.src = urlLimpia; video.play().catch(e => {}); }
     } else {
         videoFrame.innerHTML = `<iframe src="${urlLimpia}" frameborder="0" allowfullscreen style="width:100%; height:100%;"></iframe>`;
     }
@@ -107,7 +105,7 @@ function cerrarReproductor() {
     document.body.style.overflow = 'auto';
 }
 
-// ADMINISTRACIÓN - AQUÍ ESTABAN LOS ERRORES
+// ADMINISTRACIÓN - CORREGIDO
 function abrirAdmin() { if(prompt("CÓDIGO:") === "2026") { switchScreen('sc-admin'); } }
 
 function guardarUser() {
@@ -115,16 +113,20 @@ function guardarUser() {
     const p = document.getElementById('adm-up').value;
     const d = document.getElementById('adm-ud').value;
     if(u && p && d) {
-        db.ref('users').push({u, p, d});
-        alert("Usuario Guardado");
-        document.getElementById('adm-un').value = '';
-        document.getElementById('adm-up').value = '';
-    } else { alert("Completa todos los campos"); }
+        // Publicación con ID automático de Firebase
+        db.ref('users').push({u, p, d}).then(() => {
+            alert("Usuario Guardado y Publicado");
+            document.getElementById('adm-un').value = '';
+            document.getElementById('adm-up').value = '';
+            document.getElementById('adm-ud').value = '';
+        });
+    } else { alert("Completa todos los campos del usuario"); }
 }
 
 function borrarUser(id) { 
-    if(confirm("¿Eliminar usuario?")) {
-        db.ref('users/' + id).remove(); 
+    if(confirm("¿Eliminar usuario definitivamente?")) {
+        // Borrado usando el ID único
+        db.ref('users/' + id).remove().then(() => alert("Usuario eliminado"));
     }
 }
 
@@ -135,17 +137,18 @@ function guardarContenido() {
     const brand = document.getElementById('c-brand').value;
     const type = document.getElementById('c-type').value;
     if(title && poster && video) {
-        db.ref('movies').push({title, poster, video, brand, type});
-        alert("Contenido Publicado");
-        document.getElementById('c-title').value = '';
-        document.getElementById('c-post').value = '';
-        document.getElementById('c-video').value = '';
+        db.ref('movies').push({title, poster, video, brand, type}).then(() => {
+            alert("Contenido Publicado");
+            document.getElementById('c-title').value = '';
+            document.getElementById('c-post').value = '';
+            document.getElementById('c-video').value = '';
+        });
     } else { alert("Completa los campos de contenido"); }
 }
 
 function borrarMovie(id) { if(confirm("¿Borrar contenido?")) db.ref('movies/' + id).remove(); }
 
-// VISTAS
+// VISTAS Y TABLAS
 function seleccionarMarca(b) { currentBrand = b; actualizarVista(); }
 function cambiarTipo(t) { 
     currentType = t; 
@@ -175,6 +178,8 @@ function renderUserTable() {
     users.forEach(u => { 
         if(u.firebaseId) {
             html += `<tr><td>${u.u}</td><td><button onclick="borrarUser('${u.firebaseId}')" style="color:red; cursor:pointer;">Eliminar</button></td></tr>`; 
+        } else {
+            html += `<tr><td>${u.u}</td><td><span style="color:gray">Sistema</span></td></tr>`;
         }
     });
     table.innerHTML = html;

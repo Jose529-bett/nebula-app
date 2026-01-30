@@ -6,7 +6,7 @@ const db = firebase.database();
 let users = []; let movies = []; let currentBrand = 'disney'; let currentType = 'pelicula';
 let datosSerieActual = []; let primeraCarga = true; let hlsInstance = null;
 
-// ESCUCHADORES FIREBASE (Se mantienen igual que tus fotos)
+// ESCUCHADORES FIREBASE
 db.ref('users').on('value', snap => {
     const data = snap.val();
     users = data ? Object.values(data) : [{u:'admin', p:'1234', d:'2026-12-31'}];
@@ -41,7 +41,7 @@ function switchScreen(id) {
 function cerrarSesion() { document.getElementById('drop-menu').classList.add('hidden'); switchScreen('sc-login'); }
 function toggleMenu() { document.getElementById('drop-menu').classList.toggle('hidden'); }
 
-// MOTOR DE REPRODUCCIÓN (Optimizado para carga rápida)
+// MOTOR DE REPRODUCCIÓN (Protegido y Automático)
 function reproducir(cadenaVideo, titulo) {
     const player = document.getElementById('video-player');
     document.getElementById('player-title').innerText = titulo;
@@ -69,16 +69,31 @@ function gestionarFuenteVideo(url) {
     const esVideoDirecto = urlLimpia.toLowerCase().includes('.m3u8') || urlLimpia.toLowerCase().includes('.mp4');
 
     if (esVideoDirecto) {
-        // Añadimos preload="metadata" para que arranque instantáneo
-        videoFrame.innerHTML = `<video id="main-v" controls autoplay playsinline preload="metadata" style="width:100%; height:100%; background:#000;"></video>`;
+        // Bloqueo de descarga y reproducción automática habilitada
+        videoFrame.innerHTML = `
+            <video 
+                id="main-v" 
+                controls 
+                autoplay 
+                playsinline 
+                preload="metadata" 
+                controlsList="nodownload" 
+                oncontextmenu="return false;"
+                style="width:100%; height:100%; background:#000;">
+            </video>`;
+        
         const video = document.getElementById('main-v');
         
         if (urlLimpia.toLowerCase().includes('.m3u8') && Hls.isSupported()) {
             hlsInstance = new Hls({ capLevelToPlayerSize: true, autoStartLoad: true });
             hlsInstance.loadSource(urlLimpia);
             hlsInstance.attachMedia(video);
+            hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                video.play().catch(e => console.log("Reproducción manual requerida"));
+            });
         } else { 
             video.src = urlLimpia; 
+            video.play().catch(e => console.log("Esperando clic del usuario"));
         }
     } else {
         videoFrame.innerHTML = `<iframe src="${urlLimpia}" frameborder="0" allowfullscreen style="width:100%; height:100%;"></iframe>`;
@@ -99,7 +114,7 @@ function cerrarReproductor() {
     document.body.style.overflow = 'auto';
 }
 
-// ADMINISTRACIÓN Y VISTAS (Se mantienen exactamente iguales)
+// ADMINISTRACIÓN Y VISTAS
 function abrirAdmin() { if(prompt("CÓDIGO:") === "2026") { switchScreen('sc-admin'); renderUserTable(); renderMovieTable(); } }
 function guardarContenido() {
     const title = document.getElementById('c-title').value;
@@ -138,6 +153,7 @@ function renderUserTable() {
     users.forEach(u => { html += `<tr><td>${u.u}</td><td><button onclick="borrarUser('${u.u}')" style="color:red">Eliminar</button></td></tr>`; });
     table.innerHTML = html;
 }
+
 function buscar() {
     const q = document.getElementById('search-box').value.toLowerCase();
     const filtered = movies.filter(m => m.title.toLowerCase().includes(q));
